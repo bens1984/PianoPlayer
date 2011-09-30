@@ -15,6 +15,14 @@ import com.cycling74.max.*;
 //		thus frequently seen categories will be weighted much heigher than new or infrequently seen ones
 //		this should be a measure of the 'importance' of a category, in a sense
 
+//  9/30/2011 BDS - calculating residual for each learning step and outputing out outlet 2. This is just a simple difference
+//      but maybe it should be a magnitude of difference? I'm not sure which is appropriate or problematic at this point.
+
+// BDS NOTE!!!! - when the input length increases all of the categories are extended and immediately 'learn' the new
+//      dimension as a value of 0 (effectively we always assume an infinite number of dimensions with no information, i.e. 0)
+//      if they should instead be treated as null (set dimension and its complement code to 1) then change it in
+//      Category::resizeCategory (at end, weighting[i] = x.x)
+
 public class fuzzyArt extends MaxObject
 	{
 		private art myArt;
@@ -58,10 +66,6 @@ public class fuzzyArt extends MaxObject
 			myArt.outputCategoryWeight(i);
 		}
 		
-		//	public void inlet(double f)
-		//	{
-		//	}
-		
 		// ---------------- public accessors 
 		// set vigilance
 		public void vigilance(double v)
@@ -90,9 +94,9 @@ public class fuzzyArt extends MaxObject
 		// ---------------- List: input of new feature vector
 		public void list(Atom[] list)
 		{
-			if (list.length == mDimensions)	// we have new input! start checking categories.
-			{
-				double[] input = new double[mDimensions * 2];
+//			if (list.length == mDimensions)	// we have new input! start checking categories.
+//			{
+				double[] input = new double[list.length];
 				for (int i = 0; i < list.length; i++)
 					if (list[i].isInt())
 						input[i] = list[i].getInt();
@@ -111,10 +115,12 @@ public class fuzzyArt extends MaxObject
 				
 				if (mDistance && chosenCat >= 0)
 					outlet(2, Atom.newAtom(myArt.calcDistance(chosenCat)));	// output the distance of this input to the center of its category
+                else
+                    outlet(2, Atom.newAtom(myArt.getResidual()));
 				
 				outlet(0, Atom.newAtom(chosenCat));	// output the chosen category!
-			} else
-				post("error! input dimensions don't match dimension argument.");
+//			} else
+//				post("error! input dimensions don't match dimension argument.");
 		}
 		
 		//	private void outputChoices(int iter, double[] choices)
@@ -180,6 +186,7 @@ public class fuzzyArt extends MaxObject
 				private double[] input;
 				private double[] choices;
 				private int recentChoice;	// the most recently chosen category
+                private double residual;    // how much the given category changed with the last input/learning step
 				
 				public art(int dimensions, double _choice, double _learnRate, double _Vigilance)
 				{
@@ -199,7 +206,20 @@ public class fuzzyArt extends MaxObject
 				
 				public void setInput(double[] in)
 				{
-					System.arraycopy(in, 0, input, 0, input.length);
+                    // check that input is the right length, otherwise adjust all known categories!
+                    if (in.length > mDimensions)
+                    {
+                        mDimensions = in.length;
+                        input = (double[])resizeArray(input, mDimensions*2);
+                        for (int i = 0; i < categoryCount; i++)
+                            mCategories[i].resizeCategory(mDimensions*2);
+                    }
+                    
+                    for (int i = 0; i < in.length; i++)
+                    {
+                        input[i*2] = in[i]; // leave space for complemnt coding
+                    }
+//					System.arraycopy(in, 0, input, 0, in.length);
 				}
 				public void setVigilance(double v)
 				{
@@ -213,6 +233,10 @@ public class fuzzyArt extends MaxObject
 				{
 					mChoice = v;
 				}
+                public double getResidual()
+                {
+                    return residual;
+                }
 				
 				public void normalizeInput()
 				{			
@@ -227,10 +251,10 @@ public class fuzzyArt extends MaxObject
 					}
 				}
 				
-				public void complementCode()
+				public void complementCode()    // this should be done to every input, or else the ART won't really work.
 				{
-					for (int i = 0; i < mDimensions; i++)	// create complement of input - complement coding
-						input[i+mDimensions] = 1.0f - input[i];
+					for (int i = 0; i < mDimensions*2; i += 2)	// create complement of input - complement coding
+						input[i+1] = 1.0f - input[i];
 				}
 				
 				public double[] getCategoryChoice()
@@ -276,12 +300,10 @@ public class fuzzyArt extends MaxObject
 							}
 						if (maxIndex != -1)
 						{
-							//					outputChoices(iter++, choices);	// should really only do this if debug is on, or something
-							//					post("checking index: " + maxIndex);
 							// if above vigilence then learn from it
 							if (mCategories[maxIndex].mVigilance(input,workingVigilance) || categoryCount == 1)		// learn!
 							{
-								mCategories[maxIndex].Learn(input,mLearnRate); //learn
+								residual = mCategories[maxIndex].Learn(input,mLearnRate); //learn, store residual for later output
 								if (maxIndex == categoryCount-1)	// committed the previous uncommitted category, so add a new blank one.
 								{	
 									if (categoryCount+1 == mCategories.length)
@@ -408,8 +430,10 @@ public class fuzzyArt extends MaxObject
 					return minTotal / inputTotal;
 				}
 				
-				public void Learn(double[] input, double mLearnRate)
+				public double Learn(double[] input, double mLearnRate)
 				{
+                    double[] newWeighting = new double[weighting.length];
+                    double residual = 0;
 					if (!committed)
 					{
 						mLearnRate = 1;
@@ -417,10 +441,17 @@ public class fuzzyArt extends MaxObject
 					}
 					double inverseLearnRate = 1.0f - mLearnRate;
 					for (int i = 0; i < input.length; i++)
-						weighting[i] = mLearnRate * (input[i] < weighting[i] ? input[i] : weighting[i]) + inverseLearnRate * weighting[i];
+						newWeighting[i] = mLearnRate * (input[i] < weighting[i] ? input[i] : weighting[i]) + inverseLearnRate * weighting[i];
+                    // calculate residual
+                    for (int i = 0; i < weighting.length; i++)
+                    {
+                        residual += Math.abs(newWeighting[i] - weighting[i]);
+                        weighting[i] = newWeighting[i];
+                    }
 					sum = 0;	// now update the total for this category
 					for (int i = 0; i < weighting.length; i++)
 						sum += weighting[i];
+                    return residual;
 				}
 				
 				public double[] GetWeights()
@@ -445,8 +476,51 @@ public class fuzzyArt extends MaxObject
 						dist = Math.sqrt(dist);
 					return dist;
 				}
+				/**
+				 * Reallocates an array with a new size, and copies the contents
+				 * of the old array to the new array.
+				 * @param oldArray  the old array, to be reallocated.
+				 * @param newSize   the new array size.
+				 * @return          A new array with the same contents.
+				 */
+				public void resizeCategory (int newSize) //Object oldArray, int newSize) 
+				{
+                    Object oldArray = weighting;
+					int oldSize = java.lang.reflect.Array.getLength(oldArray);
+					Class elementType = oldArray.getClass().getComponentType();
+					Object newArray = java.lang.reflect.Array.newInstance(elementType,newSize);
+					int preserveLength = Math.min(oldSize,newSize);
+					if (preserveLength > 0)
+						System.arraycopy (oldArray,0,newArray,0,preserveLength);
+					weighting = (double[])newArray; 
+                    for (int i = oldSize; i < newSize; i += 2)
+                    {
+                        weighting[i] = 0.0;
+                        weighting[i+1] = 1.0;   // this is very specific, making each new dimension 'learned' at 0. Appropriate for nesting ARTs
+                    }
+				}
 			}
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
