@@ -34,13 +34,13 @@ public class fuzzyArt extends MaxObject
 		"input feature vector in (double list)"
 		};
 		private static final String[] OUTLET_ASSIST = new String[]{
-		"fit out", "iteration results out", "dump out"
+		"match out", "importance out", "residual out", "resonance out"
 		};
 		
 		public fuzzyArt(int dimensions, double _choice, double _learnRate, double _Vigilance)
 		{
 			declareInlets(new int[]{DataTypes.ALL});
-			declareOutlets(new int[]{DataTypes.ALL,DataTypes.ALL});
+			declareOutlets(new int[]{DataTypes.ALL,DataTypes.ALL,DataTypes.ALL});
 			
 			setInletAssist(INLET_ASSIST);
 			setOutletAssist(OUTLET_ASSIST);
@@ -108,16 +108,20 @@ public class fuzzyArt extends MaxObject
 				myArt.normalizeInput();
 				myArt.complementCode();
 				double[] fitVector = myArt.getCategoryChoice();
-				
-				outlet(1, Atom.newAtom(myArt.getImportance()));	// output resonance of all nodes for the given input
-				
+            double[] importance = myArt.getImportance();
+            
+            outlet(3, Atom.newAtom(fitVector));                 // output resonance of input with all categories
+            
 				int chosenCat = myArt.makeChoice();	// make a choice and learn from it
-				
+            
+							
 				if (mDistance && chosenCat >= 0)
 					outlet(2, Atom.newAtom(myArt.calcDistance(chosenCat)));	// output the distance of this input to the center of its category
                 else
                     outlet(2, Atom.newAtom(myArt.getResidual()));
-				
+                       
+                if (importance != null)
+                    outlet(1, Atom.newAtom(importance));	// output importance (resonance * observation count) of all nodes for the given input
 				outlet(0, Atom.newAtom(chosenCat));	// output the chosen category!
 //			} else
 //				post("error! input dimensions don't match dimension argument.");
@@ -184,7 +188,7 @@ public class fuzzyArt extends MaxObject
 				private int categoryCount = 0;
 				private double mChoice, mLearnRate, mVigilance;
 				private double[] input;
-				private double[] choices;
+				private double[] choices = new double[1];
 				private int recentChoice;	// the most recently chosen category
                 private double residual;    // how much the given category changed with the last input/learning step
 				
@@ -262,22 +266,27 @@ public class fuzzyArt extends MaxObject
 					// check against all existing categories, and 1 empty one
 					if (input.length > 0)
 					{
-						choices = new double[categoryCount];
+                        if (categoryCount > choices.length)
+                            choices = new double[categoryCount];
 						for (int i = 0; i < categoryCount; i++)
 						{
 							choices[i] = mCategories[i].Choose(input,mChoice);
 						}
 					} else
-						choices = new double[0];
+						for (int i = 0; i < categoryCount; i++)
+                            choices[i] = 0;
 					return choices;
 				}
 				public double[] getImportance()
 				{
-					double[] importance = new double[categoryCount];
-					for (int i = 0; i < categoryCount; i++)
-						if (inputCount > 0)
-							importance[i] = choices[i] * (mCount[i] / (double)inputCount);
-					return importance;
+                    if (inputCount > 0)
+                    {
+                        double[] importance = new double[categoryCount];
+                        for (int i = 0; i < categoryCount; i++)
+                            importance[i] = choices[i] * (mCount[i] / (double)inputCount);
+                        return importance;
+                    } else
+                        return null;
 				}
 				public int makeChoice()
 				{
@@ -306,10 +315,10 @@ public class fuzzyArt extends MaxObject
 								residual = mCategories[maxIndex].Learn(input,mLearnRate); //learn, store residual for later output
 								if (maxIndex == categoryCount-1)	// committed the previous uncommitted category, so add a new blank one.
 								{	
-									if (categoryCount+1 == mCategories.length)
+									if (categoryCount+1 >= mCategories.length)
 									{
 										mCategories = (category[])resizeArray(mCategories, mCategories.length + 16);
-										mCount = (int[])resizeArray(mCount, mCount.length + 16);
+										mCount = (int[])resizeArray(mCount, mCategories.length + 16);
 									}
 									mCategories[categoryCount++] = new category(mDimensions);
 								}
@@ -501,6 +510,15 @@ public class fuzzyArt extends MaxObject
 				}
 			}
 	}
+
+
+
+
+
+
+
+
+
 
 
 
