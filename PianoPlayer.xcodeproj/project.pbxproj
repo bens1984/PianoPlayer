@@ -8,12 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		4827847C14336D260039E90F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4827847B14336D260039E90F /* main.cpp */; };
-<<<<<<< HEAD
 		A0A5093C1442AFC50055395A /* fuzzyART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A5093A1442AFC50055395A /* fuzzyART.cpp */; };
 		A0A509401442B44D0055395A /* artCategory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A5093E1442B44D0055395A /* artCategory.cpp */; };
 		A0A509431442BE9C0055395A /* ART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A509411442BE9C0055395A /* ART.cpp */; };
-=======
->>>>>>> 3b2bdeb1c4b35a7bff41e0e4c1e37996497ce2c2
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -32,15 +29,12 @@
 		4827847714336D260039E90F /* PianoPlayer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PianoPlayer; sourceTree = BUILT_PRODUCTS_DIR; };
 		4827847B14336D260039E90F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4827847D14336D260039E90F /* PianoPlayer.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = PianoPlayer.1; sourceTree = "<group>"; };
-<<<<<<< HEAD
 		A0A5093A1442AFC50055395A /* fuzzyART.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fuzzyART.cpp; sourceTree = "<group>"; };
 		A0A5093B1442AFC50055395A /* fuzzyART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuzzyART.h; sourceTree = "<group>"; };
 		A0A5093E1442B44D0055395A /* artCategory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = artCategory.cpp; sourceTree = "<group>"; };
 		A0A5093F1442B44D0055395A /* artCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = artCategory.h; sourceTree = "<group>"; };
 		A0A509411442BE9C0055395A /* ART.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ART.cpp; sourceTree = "<group>"; };
 		A0A509421442BE9C0055395A /* ART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ART.h; sourceTree = "<group>"; };
-=======
->>>>>>> 3b2bdeb1c4b35a7bff41e0e4c1e37996497ce2c2
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,15 +69,12 @@
 			children = (
 				4827847B14336D260039E90F /* main.cpp */,
 				4827847D14336D260039E90F /* PianoPlayer.1 */,
-<<<<<<< HEAD
 				A0A5093A1442AFC50055395A /* fuzzyART.cpp */,
 				A0A5093B1442AFC50055395A /* fuzzyART.h */,
 				A0A5093E1442B44D0055395A /* artCategory.cpp */,
 				A0A5093F1442B44D0055395A /* artCategory.h */,
 				A0A509411442BE9C0055395A /* ART.cpp */,
 				A0A509421442BE9C0055395A /* ART.h */,
-=======
->>>>>>> 3b2bdeb1c4b35a7bff41e0e4c1e37996497ce2c2
 			);
 			path = PianoPlayer;
 			sourceTree = "<group>";
@@ -136,12 +127,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				4827847C14336D260039E90F /* main.cpp in Sources */,
-<<<<<<< HEAD
 				A0A5093C1442AFC50055395A /* fuzzyART.cpp in Sources */,
 				A0A509401442B44D0055395A /* artCategory.cpp in Sources */,
 				A0A509431442BE9C0055395A /* ART.cpp in Sources */,
-=======
->>>>>>> 3b2bdeb1c4b35a7bff41e0e4c1e37996497ce2c2
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,10 +209,7 @@
 				4827848214336D260039E90F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-<<<<<<< HEAD
 			defaultConfigurationName = Release;
-=======
->>>>>>> 3b2bdeb1c4b35a7bff41e0e4c1e37996497ce2c2
 		};
 /* End XCConfigurationList section */
 	};
