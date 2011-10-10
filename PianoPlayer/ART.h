@@ -1,3 +1,4 @@
+#pragma once
 //
 //  ART.h
 //  PianoPlayer
@@ -7,7 +8,7 @@
 //
 
 #include "artCategory.h"
-#include <vector>
+#include <vector.h>
 
 using namespace std;
 
@@ -16,16 +17,18 @@ class ART
 private:
     int mDimensions; // how many dimensions to match data on
     vector<artCategory*> mCategories;
-    int categoryCount;
+    vector<int> mCount;     // how many times each category has been seen. trying to measure how "confident" we are in the observation
+    int inputCount;  // how many categories we have created, how many inputs we have seen
     double mChoice, mLearnRate, mVigilance;
     double *input, *choices;
     int recentChoice;	// the most recently chosen category
+    double residual;    // how much the chosen category changed with the last input/learning step
     
 public:
-    ART(int dimensions, double _choice, double _learnRate, double _Vigilance) : categoryCount(0), mDimensions(dimensions)
+    ART(int dimensions, double _choice, double _learnRate, double _Vigilance) : mDimensions(dimensions), residual(0)
     {
         mCategories.push_back(new artCategory(mDimensions));
-        categoryCount = 1;
+        mCount.push_back(0);
         
         input = new double[mDimensions*2];
         
@@ -42,8 +45,16 @@ public:
     
     void setInput(double *_in, int size)
     {
-        memcpy(input, _in, size);
-//        System.arraycopy(in, 0, input, 0, input.length);
+        if (size > mDimensions)
+        {
+            delete input;
+            input = new double(size*2);
+            mDimensions = size;
+            for (int i = 0; i < mCategories.size(); i++)
+                mCategories.at(i)->resizeCategory(mDimensions*2);
+        }
+        for (int i = 0; i < size; i++)
+            input[i*2] = _in[i];
     }
     void setVigilance(double v)
     {
@@ -56,6 +67,10 @@ public:
     void setChoice(double v)
     {
         mChoice = v;
+    }
+    double GetResidual()
+    {
+        return residual;
     }
     
     void normalizeInput()
@@ -73,8 +88,8 @@ public:
     
     void complementCode()
     {
-        for (int i = 0; i < mDimensions; i++)	// create complement of input - complement coding
-            input[i+mDimensions] = 1.0f - input[i];
+        for (int i = 0; i < mDimensions*2; i+=2)	// create complement of input - complement coding
+            input[i+1] = 1.0f - input[i];
     }
     
     double* getCategoryChoice()
@@ -82,12 +97,23 @@ public:
         // check against all existing categories, and 1 empty one
         if (mDimensions > 0)
         {
-            choices = new double[categoryCount];
-            for (int i = 0; i < categoryCount; i++)
+            choices = new double[mCategories.size()];
+            for (int i = 0; i < mCategories.size(); i++)
                 choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice);
         } else
-            choices = new double[0];
+            choices = 0x00; //new double[0];
         return choices;
+    }
+    double *GetImportance()
+    {
+        if (inputCount > 0)
+        {
+            double* importance = new double[mCategories.size()];
+            for (int i = 0; i < mCategories.size(); i++)
+                importance[i] = choices[i] * (mCount[i] / (double)inputCount);
+            return importance;
+        } else
+            return 0x00;
     }
     int makeChoice()
     {
@@ -96,31 +122,26 @@ public:
     int makeChoice(double workingVigilance)
     {
         int maxIndex = -1;
-        int iter = 0;
         bool chosen = false;		// check mVigilance stuff here...
         while (!chosen)
         {
             // find largest match value
             double max = 0;
-            for (int i = 0; i < categoryCount; i++)
+            for (int i = 0; i < mCategories.size(); i++)
                 if (choices[i] > max)
                 {
                     max = choices[i];
                     maxIndex = i;
                 }
             if (maxIndex != -1)
-            {
-                //					outputChoices(iter++, choices);	// should really only do this if debug is on, or something
-                //					post("checking index: " + maxIndex);
-                // if above vigilence then learn from it
-                if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || categoryCount == 1)		// learn!
+            {          // if above vigilence then learn from it
+                if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// learn!
                 {
                     mCategories.at(maxIndex)->Learn(input,mDimensions*2,mLearnRate); //learn
-                    if (maxIndex == categoryCount-1)	// committed the previous uncommitted category, so add a new blank one.
+                    if (maxIndex == mCategories.size()-1)	// committed the previous uncommitted category, so add a new blank one.
                     {	
-//                        if (categoryCount+1 == mCategories.size())
-//                            mCategories = (category[])resizeArray(mCategories, mCategories.length + 16);
                         mCategories.push_back(new artCategory(mDimensions));
+                        mCount.push_back(0);
                     }
                     chosen = true;
                     recentChoice = maxIndex;
@@ -133,6 +154,11 @@ public:
             } else
                 chosen = true;
         }	// otherwise look again.
+        if (maxIndex > -1)
+        {
+            inputCount++;
+            mCount.at(maxIndex) += 1;
+        }
         return maxIndex;
     }
     //	set the mVigilance just high enough to reset the chosen category and look again.
@@ -177,8 +203,8 @@ public:
     }
     double* getWeights()	// return all of the weights of all of our categories
     {
-        double *weights = new double[categoryCount*mDimensions*2];
-        for (int i = 0; i < categoryCount; i++)
+        double *weights = new double[mCategories.size()*mDimensions*2];
+        for (int i = 0; i < mCategories.size(); i++)
             memcpy(weights+(i*mDimensions*2), mCategories.at(i)->GetWeights(), mDimensions*2);
         return weights;
     }

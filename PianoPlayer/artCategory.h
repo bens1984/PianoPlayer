@@ -1,3 +1,4 @@
+#pragma once
 //
 //  artCategory.h
 //  PianoPlayer
@@ -7,6 +8,7 @@
 //
 
 #include <Math.h>
+#include <string.h>
 
 class artCategory
 {
@@ -94,5 +96,19 @@ public:
         if (dist > 0)
             dist = sqrt(dist);
         return dist;
+    }
+    
+    void resizeCategory(int newSize)
+    {
+        double *oldWeights = weighting;
+        weighting = new double[newSize];
+        memcpy(weighting, oldWeights, dimensions);
+        for (int i = dimensions; i < newSize; i+=2)
+        {
+            weighting[i] = 0.0;
+            weighting[i+1] = 1.0;       // this is specific to the RL, makes each new dimension learned at '0', rather than leaving it open (setting both of these values to 1)
+        }
+             dimensions = newSize;
+        delete oldWeights;
     }
 };

@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		4827847C14336D260039E90F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4827847B14336D260039E90F /* main.cpp */; };
+		48278497144348330039E90F /* OSCSend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 48278494144348320039E90F /* OSCSend.cpp */; };
+		48278498144348330039E90F /* OSCReceive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 48278496144348330039E90F /* OSCReceive.cpp */; };
+		4827849B1443499B0039E90F /* liboscpack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4827849A1443499B0039E90F /* liboscpack.a */; };
 		A0A5093C1442AFC50055395A /* fuzzyART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A5093A1442AFC50055395A /* fuzzyART.cpp */; };
 		A0A509401442B44D0055395A /* artCategory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A5093E1442B44D0055395A /* artCategory.cpp */; };
 		A0A509431442BE9C0055395A /* ART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A509411442BE9C0055395A /* ART.cpp */; };
@@ -29,6 +32,11 @@
 		4827847714336D260039E90F /* PianoPlayer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PianoPlayer; sourceTree = BUILT_PRODUCTS_DIR; };
 		4827847B14336D260039E90F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4827847D14336D260039E90F /* PianoPlayer.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = PianoPlayer.1; sourceTree = "<group>"; };
+		48278493144348320039E90F /* OSCSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSCSend.h; sourceTree = "<group>"; };
+		48278494144348320039E90F /* OSCSend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OSCSend.cpp; sourceTree = "<group>"; };
+		48278495144348320039E90F /* OSCReceive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSCReceive.h; sourceTree = "<group>"; };
+		48278496144348330039E90F /* OSCReceive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OSCReceive.cpp; sourceTree = "<group>"; };
+		4827849A1443499B0039E90F /* liboscpack.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liboscpack.a; path = code/oscpack/Mac/build/Release/liboscpack.a; sourceTree = DEVELOPER_DIR; };
 		A0A5093A1442AFC50055395A /* fuzzyART.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fuzzyART.cpp; sourceTree = "<group>"; };
 		A0A5093B1442AFC50055395A /* fuzzyART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fuzzyART.h; sourceTree = "<group>"; };
 		A0A5093E1442B44D0055395A /* artCategory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = artCategory.cpp; sourceTree = "<group>"; };
@@ -42,6 +50,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4827849B1443499B0039E90F /* liboscpack.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -67,6 +76,11 @@
 		4827847A14336D260039E90F /* PianoPlayer */ = {
 			isa = PBXGroup;
 			children = (
+				4827849A1443499B0039E90F /* liboscpack.a */,
+				48278493144348320039E90F /* OSCSend.h */,
+				48278494144348320039E90F /* OSCSend.cpp */,
+				48278495144348320039E90F /* OSCReceive.h */,
+				48278496144348330039E90F /* OSCReceive.cpp */,
 				4827847B14336D260039E90F /* main.cpp */,
 				4827847D14336D260039E90F /* PianoPlayer.1 */,
 				A0A5093A1442AFC50055395A /* fuzzyART.cpp */,
@@ -130,6 +144,8 @@
 				A0A5093C1442AFC50055395A /* fuzzyART.cpp in Sources */,
 				A0A509401442B44D0055395A /* artCategory.cpp in Sources */,
 				A0A509431442BE9C0055395A /* ART.cpp in Sources */,
+				48278497144348330039E90F /* OSCSend.cpp in Sources */,
+				48278498144348330039E90F /* OSCReceive.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,6 +191,11 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = ../oscpack;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(DEVELOPER_DIR)/code/oscpack/Mac/build/Release\"",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -186,6 +207,11 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = ../oscpack;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(DEVELOPER_DIR)/code/oscpack/Mac/build/Release\"",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
