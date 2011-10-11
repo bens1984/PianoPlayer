@@ -28,7 +28,8 @@ public:
     bool mVigilance(double input[], int size, double mVigilance);
     double GetVigilance(double input[], int size);
     
-    double Learn(double input[], int size, double mLearnRate);
+    double Learn(const double* input, int size, double mLearnRate);
+    double GetResidual(const double* input, int size, double mLearnRate);  // return the amount of change in the category if this input was learned with LearnRate=1
     
     const double* GetWeights();
     

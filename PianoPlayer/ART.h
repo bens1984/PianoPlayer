@@ -45,7 +45,8 @@ private:
     {
         if (size > mDimensions)
         {
-            delete input;
+            if (input != 0x00)
+                delete input;
             input = new double(size*2);
             mDimensions = size;
             for (int i = 0; i < mCategories.size(); i++)
@@ -124,7 +125,7 @@ public:
     {
         double* ret = new double[mCategories.size()];
         memcpy(ret, choices, mCategories.size()*8);
-        return choices;
+        return ret;
     }
 //    const double* GetImportance()
 //    {
@@ -205,7 +206,10 @@ public:
             {          // if above vigilence then learn from it
                 if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
                 {
-                    residual = mCategories.at(maxIndex)->Learn(input,mDimensions*2,mLearnRate); // <- figure out how much residual would occur
+                    if (maxIndex == mCategories.size()-1)   // it would be a new category
+                        residual = 1.0 / (mDimensions);   // new categories are too chaotic for us to privilege
+                    else
+                        residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,mLearnRate); // <- figure out how much residual would occur
                     chosen = true;
                     recentChoice = maxIndex;
                 }

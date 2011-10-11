@@ -10,6 +10,7 @@
 
 #include "ReinforcementLearner.h"
 #include "OSCReceive.h"
+#include "OSCSend.h"
 
 using namespace std;
 
@@ -23,19 +24,28 @@ int main (int argc, const char * argv[])
     std::cout << "Hello, World!\n";
     
     while (1) {
-        OSCData data = myOSC.ReadAPacket();
-        if (data.header == oscUpdate) {
-            double *input = new double[data.data.size()];
-            for (int i = 0; i < data.data.size(); i++)
-                input[i] = data.data[i];
-//            input[0] = (rand() % 100) * 0.01;
-            myRL->ProcessNewObservation(input[0]); //, data.data.size());
-            cout << "input: ";
-            for (int i = 0; i < 6; i++)
-                cout << input[i] << " ";
-            cout << endl;
-            cout << "Category: " << myRL->GetChosenCategory() << " distance: " << myRL->GetDistance() << endl;
-            delete input;
+        OSCData* data = myOSC.ReadAPacket();
+        if (data != 0x00)
+        {
+            if (data->header == oscUpdate) {
+                double *input = new double[data->data.size()];
+                for (int i = 0; i < data->data.size(); i++)
+                    input[i] = data->data[i];
+                cout << "input: ";
+                for (int i = 0; i < 6; i++)
+                    cout << input[i] << " ";
+                cout << endl;
+                float IR = myRL->ProcessNewObservation(input[0]); //, data.data.size());
+                cout << "Category: " << myRL->GetChosenCategory() << " distance: " << myRL->GetDistance() << endl;
+                delete input;
+                
+                cout << "Reward: " << IR << endl << endl;
+                OSCSend::getSingleton()->oscSend("/IR", 1, &IR);
+            }
+            delete data;
+            
+            int nextStep = myRL->PredictMaximalInput();
+            OSCSend::getSingleton()->oscSend("/predict", 1, &nextStep);
         }
     }    
 //    double* input = new double[6];

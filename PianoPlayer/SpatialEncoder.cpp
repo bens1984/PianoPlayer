@@ -9,8 +9,10 @@
 #include "SpatialEncoder.h"
 #include <string.h>
 
-SpatialEncoder::SpatialEncoder(const int& tokenCount) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.95)
+SpatialEncoder::SpatialEncoder(const int& tokenCount) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.9)
 {
+    if (dimensions == 0)
+        dimensions = 1;
     myEncoder = new double[dimensions];
     for (int i = 0; i < dimensions; i++)
         myEncoder[i] = 0;
@@ -26,7 +28,7 @@ void SpatialEncoder::AddToken(const int& token)
         DecayEncoding(decayAmount);
         myEncoder[token] = 1.0;
     } else
-        cout << "Warning: SpatialEncoder::AddToken: token out of range." << endl;
+        cout << "Warning: SpatialEncoder::AddToken: '" << token << "' token out of range. " << dimensions << endl;
 }
 
 void SpatialEncoder::DecayEncoding(const double& scalar)

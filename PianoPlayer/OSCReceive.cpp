@@ -6,7 +6,7 @@
 namespace MusiVerse
 {
 	pthread_mutex_t* oscmutex;
-	std::list<OSCData> rxCommands;
+	std::list<OSCData*> rxCommands;
 }
 
 using namespace MusiVerse;
@@ -29,23 +29,25 @@ void ExamplePacketListener::ProcessMessage( const osc::ReceivedMessage& m, const
         // example of parsing single messages. osc::OsckPacketListener
         // handles the bundle traversal.
         
-		OSCData d;
-		d.header = oscNothing;
+		OSCData *d = 0x00; //new OSCData;
+//		d.header = oscNothing;
 
 		osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
 		if( strcmp( m.AddressPattern(), "/obs") == 0 )	// this is a packet of feature data: /obs len x x x x
 		{
+            d = new OSCData;
             int len = (arg++)->AsInt32();
             for (int i = 0; i < len; i++)
-                d.data.push_back((arg++)->AsFloat());	// the observed state
-			d.header = oscUpdate;
+                d->data.push_back((arg++)->AsFloat());	// the observed state
+			d->header = oscUpdate;
         } 
-		if (d.header != oscNothing)
+		if (d != 0x00) //d.header != oscNothing)
 		{
 			pthread_mutex_lock(MusiVerse::oscmutex);	//wait for the lock
 			MusiVerse::rxCommands.push_back(d);
 			pthread_mutex_unlock(MusiVerse::oscmutex);
-		}
+		} else
+            delete d;
     }catch( osc::Exception& e )
 	{
         // any parsing errors such as unexpected argument types, or 
@@ -86,10 +88,10 @@ void OSCReceive::StopReception()
 {
 	pthread_cancel(*listenThread);
 }
-OSCData OSCReceive::ReadAPacket()
+OSCData* OSCReceive::ReadAPacket()
 {
-	OSCData o;
-	o.header = oscNothing;
+	OSCData* o = 0x00;
+//	o.header = oscNothing;
 	if (pthread_mutex_trylock(MusiVerse::oscmutex) == 0)
 	{
 		if (MusiVerse::rxCommands.size() > 0)

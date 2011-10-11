@@ -37,7 +37,7 @@ protected:
 };
 
 extern pthread_mutex_t* oscmutex;
-extern std::list<OSCData> rxCommands;
+extern std::list<OSCData*> rxCommands;
 
 static void *startListenThread(void *arg);
 
@@ -53,7 +53,7 @@ public:
 	void StartReception();
 	void StopReception();
 
-	OSCData ReadAPacket();
+	OSCData* ReadAPacket();
 };
 
 #endif //__oscreceive_h_

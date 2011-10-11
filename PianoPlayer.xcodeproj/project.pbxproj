@@ -31,21 +31,21 @@
 
 /* Begin PBXFileReference section */
 		4827847714336D260039E90F /* PianoPlayer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = PianoPlayer; sourceTree = BUILT_PRODUCTS_DIR; };
-		4827847B14336D260039E90F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		4827847B14336D260039E90F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = main.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		4827847D14336D260039E90F /* PianoPlayer.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = PianoPlayer.1; sourceTree = "<group>"; };
 		48278493144348320039E90F /* OSCSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSCSend.h; sourceTree = "<group>"; };
 		48278494144348320039E90F /* OSCSend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OSCSend.cpp; sourceTree = "<group>"; };
 		48278495144348320039E90F /* OSCReceive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSCReceive.h; sourceTree = "<group>"; };
-		48278496144348330039E90F /* OSCReceive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OSCReceive.cpp; sourceTree = "<group>"; };
+		48278496144348330039E90F /* OSCReceive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = OSCReceive.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		4827849A1443499B0039E90F /* liboscpack.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liboscpack.a; path = code/oscpack/Mac/build/Release/liboscpack.a; sourceTree = DEVELOPER_DIR; };
-		A0047D6C1443603F00D839E0 /* SpatialEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SpatialEncoder.cpp; sourceTree = "<group>"; };
+		A0047D6C1443603F00D839E0 /* SpatialEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = SpatialEncoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		A0047D6D1443603F00D839E0 /* SpatialEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpatialEncoder.h; sourceTree = "<group>"; };
 		A0A5093A1442AFC50055395A /* ReinforcementLearner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReinforcementLearner.cpp; sourceTree = "<group>"; };
-		A0A5093B1442AFC50055395A /* ReinforcementLearner.h */ = {isa = PBXFileReference; fileEncoding = 4; path = ReinforcementLearner.h; sourceTree = "<group>"; };
-		A0A5093E1442B44D0055395A /* artCategory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = artCategory.cpp; sourceTree = "<group>"; };
+		A0A5093B1442AFC50055395A /* ReinforcementLearner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ReinforcementLearner.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		A0A5093E1442B44D0055395A /* artCategory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = artCategory.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		A0A5093F1442B44D0055395A /* artCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = artCategory.h; sourceTree = "<group>"; };
 		A0A509411442BE9C0055395A /* ART.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ART.cpp; sourceTree = "<group>"; };
-		A0A509421442BE9C0055395A /* ART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ART.h; sourceTree = "<group>"; };
+		A0A509421442BE9C0055395A /* ART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ART.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

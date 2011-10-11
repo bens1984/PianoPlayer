@@ -8,22 +8,24 @@
 #define OSC_DESTINATION "127.0.0.1"
 #define OSC_PORT 7130
 
-class myOSCHandle
+class OSCSend
 {
 protected:
 	IpEndpointName ip;
 	UdpTransmitSocket* transmitSocket;
 	//osc::OutboundPacketStream p;
 public:
-	myOSCHandle(const char * addr, int prt);
+	OSCSend(const char * addr, int prt);
 
 	// send a vector of floats. 
-	int oscSend(char* message, int size, float* data);
+	int oscSend(const char* message, int size, float* data);
+    void oscSend(const char* header, int size, const double* data);
+    void oscSend(const char* header, int size, const int* data);
 
 	void oscSend(const char* header, const char* message);
 	void oscSend(const char* header, int argc, float argv[], const char* message);
 	
-	static myOSCHandle* getSingleton();
+	static OSCSend* getSingleton();
 
 	/*int oscSend(char* message, int argc, std::string argv[])
 	//int oscSend(char* message, int argc, double argv[])
@@ -47,5 +49,5 @@ public:
 	}*/
 };
 
-//extern myOSCHandle* myOSC;		//global OSC handle
+//extern OSCSend* myOSC;		//global OSC handle
 #endif //__SimpleSend_h_

@@ -54,7 +54,7 @@ double ArtCategory::GetVigilance(double input[], int size)
     return minTotal / inputTotal;
 }
 
-double ArtCategory::Learn(double input[], int size, double mLearnRate)
+double ArtCategory::Learn(const double* input, int size, double mLearnRate)
 {
     double *newWeighting = new double[dimensions];
     double residual = 0;
@@ -69,13 +69,32 @@ double ArtCategory::Learn(double input[], int size, double mLearnRate)
     // calculate residual
     for (int i = 0; i < dimensions; i++)
     {
-        residual += fabs(newWeighting[i] - weighting[i]);
+        residual += weighting[i] - newWeighting[i];
         weighting[i] = newWeighting[i];
     }
     sum = 0;	// now update the total for this category
     for (int i = 0; i < dimensions; i++)
         sum += weighting[i];
-    return residual;
+    delete newWeighting;
+    
+    return residual / (size * 0.5);
+}
+double ArtCategory::GetResidual(const double* input, int size, double mLearnRate)  // return the amount of change in the category if this input was learned with LearnRate=1
+{
+    double residual = 0;
+    
+    if (!committed)
+    {
+        mLearnRate = 1;
+    }
+    double inverseLearnRate = 1.0f - mLearnRate;
+    for (int i = 0; i < size; i++)
+    {
+        double min = (input[i] < weighting[i] ? input[i] : weighting[i]);
+        residual += weighting[i] - min; //(mLearnRate * min + inverseLearnRate * weighting[i]);
+    }
+    
+    return residual / (size * 0.5);
 }
 
 const double* ArtCategory::GetWeights()

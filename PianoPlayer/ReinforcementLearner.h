@@ -25,6 +25,8 @@
 #include "ART.h"
 #include "SpatialEncoder.h"
 
+#include "OSCSend.h"
+
 
 class ReinforcementLearner
 {
@@ -58,11 +60,13 @@ public:
     ~ReinforcementLearner()
     {
         delete myArt;
+        delete myEncoder;
     }
     
-    void ProcessNewObservation(const int& obs)  // this is the next pitch that is observed
+    double ProcessNewObservation(const int& obs)  // this is the next pitch that is observed
     {
         myEncoder->AddToken(obs);       // spatially encode the input
+        OSCSend::getSingleton()->oscSend("/stm", 12, &myEncoder->GetEncoding());
         
         myArt->ProcessNewObservation(&myEncoder->GetEncoding(), 12);    // add it to the ART
         if (fitVector != 0x00)
@@ -83,39 +87,58 @@ public:
         importance = new double[occurrences.size()];
         for (int i = 0; i < occurrences.size(); i++)
         {
-            importance[i] = fitVector[i] / (double)(occurrences.at(i) / inputCount);
+            importance[i] = fitVector[i] * (occurrences.at(i) / (double)inputCount);
             importSum += importance[i];
         }
+        importSum = importSum;    // try magnitude of import vector
+        cout << importSum << " residual: " << myArt->GetResidual() << endl;
         
-        double intrinsicReward = importSum * myArt->GetResidual();  // this is the intrinsic reward for observing this input!
+        return importSum * myArt->GetResidual();  // this is the intrinsic reward for observing this input!
     }
     
-    void PredictMaximalInput()      // look one step ahead and calculate what input value would be most rewarding
+    int PredictMaximalInput()      // look one step ahead and calculate what input value would be most rewarding
     {
-        double reward[12];      // hold the potential reward for each of our proposals
+        double mImportance[occurrences.size()];
+        double reward[12]; //, rewardLR[12];      // hold the potential reward for each of our proposals
         SpatialEncoder tempEncoder(12);
         for (int i = 0; i < 12; i++)    // try each of the pitches
         {
             tempEncoder.Copy(myEncoder);    // copy the 'real' encoder's state
             tempEncoder.AddToken(i);        // add the proposed input
+//            OSCSend::getSingleton()->oscSend("/tempEncoding", 12, &tempEncoder.GetEncoding());
             
-            myArt->ProcessNewObservation(&(tempEncoder.GetEncoding()), 12);  // stick it in the ART and let it think about it.
+            myArt->ProcessNewObservation(&tempEncoder.GetEncoding(), 12);  // stick it in the ART and let it think about it.
             if (fitVector != 0x00)
                 delete fitVector;
             fitVector = myArt->GetCategoryChoice();                         // get the resonance of each category
             
-            double importSum = 0.0;
-            if (importance != 0x00)                 // now calculate the importance vector
-                delete importance;
-            importance = new double[occurrences.size()];
-            for (int i = 0; i < occurrences.size(); i++)
-            {
-                importance[i] = fitVector[i] / (double)(occurrences.at(i) / inputCount);
-                importSum += importance[i];
-            }
+            int cat = myArt->PredictChoice();
             
-            reward[i] = importSum * myArt->GetResidual();   // this won't work yet, need to predict the residual somehow.
+            double importSum = 0.0;     // now calculate the importance vector, i.e. how boring something is.
+            for (int j = 0; j < occurrences.size(); j++)
+            {
+                mImportance[j] = fitVector[j] * (occurrences.at(j) / (double)inputCount);
+                importSum += mImportance[j];
+            }
+            importSum = importSum;    // try magnitude of import vector
+            
+            double res = myArt->GetResidual();
+            reward[i] = importSum * res;               // here we want a lot of change to something boring, or minimal change to something new
+            cout << "predict cat " << cat << " produces " << res << ", reward: " << reward[i] << endl;
+//            rewardLR[i] = (1.0-importSum) * myArt->GetResidualLR();
         }
+        OSCSend::getSingleton()->oscSend("/predictReward", 12, &reward[0]);
+        double max = -1;
+        int maxInput = -1;
+        for (int i = 0; i < 12; i++)
+        {
+            if (reward[i] > max)
+            {
+                max = reward[i];
+                maxInput = i;
+            }
+        }
+        return maxInput;
     }
     
     // ---------------- List: input of new feature vector
