@@ -92,7 +92,30 @@ public:
     
     void PredictMaximalInput()      // look one step ahead and calculate what input value would be most rewarding
     {
-        
+        double reward[12];      // hold the potential reward for each of our proposals
+        SpatialEncoder tempEncoder(12);
+        for (int i = 0; i < 12; i++)    // try each of the pitches
+        {
+            tempEncoder.Copy(myEncoder);    // copy the 'real' encoder's state
+            tempEncoder.AddToken(i);        // add the proposed input
+            
+            myArt->ProcessNewObservation(&(tempEncoder.GetEncoding()), 12);  // stick it in the ART and let it think about it.
+            if (fitVector != 0x00)
+                delete fitVector;
+            fitVector = myArt->GetCategoryChoice();                         // get the resonance of each category
+            
+            double importSum = 0.0;
+            if (importance != 0x00)                 // now calculate the importance vector
+                delete importance;
+            importance = new double[occurrences.size()];
+            for (int i = 0; i < occurrences.size(); i++)
+            {
+                importance[i] = fitVector[i] / (double)(occurrences.at(i) / inputCount);
+                importSum += importance[i];
+            }
+            
+            reward[i] = importSum * myArt->GetResidual();   // this won't work yet, need to predict the residual somehow.
+        }
     }
     
     // ---------------- List: input of new feature vector

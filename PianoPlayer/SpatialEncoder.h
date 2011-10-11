@@ -32,7 +32,12 @@ public:
     void DecayEncoding(const double& scalar);
     
     const double& GetEncoding();
+    int GetDimensions();
+    double GetDecayAmount();
+    DecayModel GetDecayModel();
     
     void SetDecayAmount(const double& decay);
     void SetDecayModel(DecayModel model);
+    
+    void Copy(SpatialEncoder* that);  // copy 'that' into us
 };

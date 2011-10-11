@@ -183,7 +183,47 @@ public:
 //        }
         return maxIndex;
     }
-    
+    int PredictChoice()
+    {
+        return PredictChoice(mVigilance);
+    }
+    int PredictChoice(double workingVigilance)
+    {
+        int maxIndex = -1;
+        bool chosen = false;		// check mVigilance stuff here...
+        while (!chosen)
+        {
+            // find largest match value
+            double max = 0;
+            for (int i = 0; i < mCategories.size(); i++)
+                if (choices[i] > max)
+                {
+                    max = choices[i];
+                    maxIndex = i;
+                }
+            if (maxIndex != -1)
+            {          // if above vigilence then learn from it
+                if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
+                {
+                    residual = mCategories.at(maxIndex)->Learn(input,mDimensions*2,mLearnRate); // <- figure out how much residual would occur
+                    chosen = true;
+                    recentChoice = maxIndex;
+                }
+                else	// failed the mVigilance test.
+                {
+                    choices[maxIndex] = -1; // reset, try again
+                    maxIndex = -1;
+                }
+            } else
+                chosen = true;
+        }	// otherwise look again.
+        //        if (maxIndex > -1)
+        //        {
+        //            inputCount++;
+        //            mCount.at(maxIndex) += 1;
+        //        }
+        return maxIndex;
+    }
     double calcDistance(int cat)	// use set input and calculate distance to center of specified category
     {
         if (cat < mCategories.size())
