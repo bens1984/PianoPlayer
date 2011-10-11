@@ -16,19 +16,73 @@ class ART
 {
 private:
     int mDimensions; // how many dimensions to match data on
-    vector<artCategory*> mCategories;
-    vector<int> mCount;     // how many times each category has been seen. trying to measure how "confident" we are in the observation
-    int inputCount;  // how many categories we have created, how many inputs we have seen
+    vector<ArtCategory*> mCategories;
+//    vector<int> mCount;     // how many times each category has been seen. trying to measure how "confident" we are in the observation
+//    int inputCount;  // how many inputs we have seen
     double mChoice, mLearnRate, mVigilance;
     double *input, *choices;
     int recentChoice;	// the most recently chosen category
     double residual;    // how much the chosen category changed with the last input/learning step
     
+    void normalizeInput()
+    {			
+        // limit input to [0,1] - normalize the input vector
+        double max = 0;
+        for (int i = 0; i < mDimensions; i++)
+            max = (input[i] > max ? input[i] : max);
+        if (max > 1)
+        {
+            for (int i = 0; i < mDimensions; i++)
+                input[i] /= max;
+        }
+    }
+    inline void complementCode()
+    {
+        for (int i = 0; i < mDimensions*2; i+=2)	// create complement of input - complement coding
+            input[i+1] = 1.0f - input[i];
+    }
+    void setInput(const double *_in, const int& size)
+    {
+        if (size > mDimensions)
+        {
+            delete input;
+            input = new double(size*2);
+            mDimensions = size;
+            for (int i = 0; i < mCategories.size(); i++)
+                mCategories.at(i)->resizeCategory(mDimensions*2);
+        }
+        for (int i = 0; i < size; i++)
+            input[i*2] = _in[i];
+    }
+    
+    //	set the mVigilance just high enough to reset the chosen category and look again.
+    int increaseVigilance()
+    {
+        if (recentChoice > -1)
+        {
+            double vig = mCategories.at(recentChoice)->GetVigilance(input,mDimensions*2) + 0.01f;	// increase by a little bit.
+            recentChoice = makeChoice(vig);
+        }
+        return recentChoice;
+    }
+    void FillCategoryChoice()
+    {
+        if (choices != 0x00)
+            delete choices;
+        // check against all existing categories, and 1 empty one
+        if (mDimensions > 0)
+        {
+            choices = new double[mCategories.size()];
+            for (int i = 0; i < mCategories.size(); i++)
+                choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice);
+        } else
+            choices = 0x00; //new double[0];
+    }
 public:
     ART(int dimensions, double _choice, double _learnRate, double _Vigilance) : mDimensions(dimensions), residual(0)
     {
-        mCategories.push_back(new artCategory(mDimensions));
-        mCount.push_back(0);
+        mCategories.push_back(new ArtCategory(mDimensions));
+//        mCount.push_back(0);
         
         input = new double[mDimensions*2];
         
@@ -42,19 +96,12 @@ public:
         for (int i = 0; i < mCategories.size(); i++)
             delete mCategories.at(i);
     }
-    
-    void setInput(double *_in, int size)
+    void ProcessNewObservation(const double *list, const int& length)
     {
-        if (size > mDimensions)
-        {
-            delete input;
-            input = new double(size*2);
-            mDimensions = size;
-            for (int i = 0; i < mCategories.size(); i++)
-                mCategories.at(i)->resizeCategory(mDimensions*2);
-        }
-        for (int i = 0; i < size; i++)
-            input[i*2] = _in[i];
+        setInput(list, length);
+        normalizeInput();
+        complementCode();
+        FillCategoryChoice();
     }
     void setVigilance(double v)
     {
@@ -73,48 +120,23 @@ public:
         return residual;
     }
     
-    void normalizeInput()
-    {			
-        // limit input to [0,1] - normalize the input vector
-        double max = 0;
-        for (int i = 0; i < mDimensions; i++)
-            max = (input[i] > max ? input[i] : max);
-        if (max > 1)
-        {
-            for (int i = 0; i < mDimensions; i++)
-                input[i] /= max;
-        }
-    }
-    
-    void complementCode()
+    const double* GetCategoryChoice()
     {
-        for (int i = 0; i < mDimensions*2; i+=2)	// create complement of input - complement coding
-            input[i+1] = 1.0f - input[i];
-    }
-    
-    double* getCategoryChoice()
-    {
-        // check against all existing categories, and 1 empty one
-        if (mDimensions > 0)
-        {
-            choices = new double[mCategories.size()];
-            for (int i = 0; i < mCategories.size(); i++)
-                choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice);
-        } else
-            choices = 0x00; //new double[0];
+        double* ret = new double[mCategories.size()];
+        memcpy(ret, choices, mCategories.size()*8);
         return choices;
     }
-    double *GetImportance()
-    {
-        if (inputCount > 0)
-        {
-            double* importance = new double[mCategories.size()];
-            for (int i = 0; i < mCategories.size(); i++)
-                importance[i] = choices[i] * (mCount[i] / (double)inputCount);
-            return importance;
-        } else
-            return 0x00;
-    }
+//    const double* GetImportance()
+//    {
+//        if (inputCount > 0)
+//        {
+//            double *importance = new double[mCategories.size()];
+//            for (int i = 0; i < mCategories.size(); i++)
+//                importance[i] = choices[i] * (mCount[i] / (double)inputCount);
+//            return importance;
+//        } else
+//            return 0x00;
+//    }
     int makeChoice()
     {
         return makeChoice(mVigilance);
@@ -137,11 +159,11 @@ public:
             {          // if above vigilence then learn from it
                 if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// learn!
                 {
-                    mCategories.at(maxIndex)->Learn(input,mDimensions*2,mLearnRate); //learn
+                    residual = mCategories.at(maxIndex)->Learn(input,mDimensions*2,mLearnRate); //learn
                     if (maxIndex == mCategories.size()-1)	// committed the previous uncommitted category, so add a new blank one.
                     {	
-                        mCategories.push_back(new artCategory(mDimensions));
-                        mCount.push_back(0);
+                        mCategories.push_back(new ArtCategory(mDimensions));
+//                        mCount.push_back(0);
                     }
                     chosen = true;
                     recentChoice = maxIndex;
@@ -154,46 +176,14 @@ public:
             } else
                 chosen = true;
         }	// otherwise look again.
-        if (maxIndex > -1)
-        {
-            inputCount++;
-            mCount.at(maxIndex) += 1;
-        }
+//        if (maxIndex > -1)
+//        {
+//            inputCount++;
+//            mCount.at(maxIndex) += 1;
+//        }
         return maxIndex;
     }
-    //	set the mVigilance just high enough to reset the chosen category and look again.
-    int increaseVigilance()
-    {
-        if (recentChoice > -1)
-        {
-            double vig = mCategories.at(recentChoice)->GetVigilance(input,mDimensions*2) + 0.01f;	// increase by a little bit.
-            recentChoice = makeChoice(vig);
-        }
-        return recentChoice;
-    }
-//    void outputCategoryWeight(int i)
-//    {
-//        if (i>= 0 && i < mCategories.size())
-//            outlet(2, mCategories.at(i)->GetWeights());
-//    }
-//    /**
-//     * Reallocates an array with a new size, and copies the contents
-//     * of the old array to the new array.
-//     * @param oldArray  the old array, to be reallocated.
-//     * @param newSize   the new array size.
-//     * @return          A new array with the same contents.
-//     */
-//    private Object resizeArray (Object oldArray, int newSize) 
-//    {
-//        int oldSize = java.lang.reflect.Array.getLength(oldArray);
-//        Class elementType = oldArray.getClass().getComponentType();
-//        Object newArray = java.lang.reflect.Array.newInstance(elementType,newSize);
-//        int preserveLength = Math.min(oldSize,newSize);
-//        if (preserveLength > 0)
-//            System.arraycopy (oldArray,0,newArray,0,preserveLength);
-//        return newArray; 
-//    }
-//    
+    
     double calcDistance(int cat)	// use set input and calculate distance to center of specified category
     {
         if (cat < mCategories.size())
@@ -201,11 +191,11 @@ public:
         else
             return -1;
     }
-    double* getWeights()	// return all of the weights of all of our categories
+    const double *getWeights()	// return all of the weights of all of our categories
     {
         double *weights = new double[mCategories.size()*mDimensions*2];
         for (int i = 0; i < mCategories.size(); i++)
-            memcpy(weights+(i*mDimensions*2), mCategories.at(i)->GetWeights(), mDimensions*2);
+            memcpy(weights+(i*mDimensions*2), mCategories.at(i)->GetWeights(), mDimensions*2*8);
         return weights;
     }
 };
