@@ -18,7 +18,8 @@ enum OSCCommands
 {
 	oscNothing,
 	oscUpdate,
-    oscSponteneity
+    oscSponteneity,
+    oscReset
 };
 
 struct OSCData

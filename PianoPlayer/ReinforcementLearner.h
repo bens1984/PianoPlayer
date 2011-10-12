@@ -56,7 +56,7 @@ public:
 //        mChoice = _choice;
 //        mVigilance = _Vigilance;
         
-        myArt = new ART(0, 0.1, 0.95);    // params: choice, learning rate, vigilance
+        myArt = new ART(0, 0.9, 0.925);    // params: choice, learning rate, vigilance
         myEncoder = new SpatialEncoder(12);     // for encoding pitch inputs
         intervalEncoder = new SpatialEncoder(7);        // for encoding intervals
         std::cout << "ReinforcementLearner -- ©2010 Benjamin Smith\n";
@@ -73,7 +73,12 @@ public:
     {
         myEncoder->AddToken(obs);       // spatially encode the input
         if (prevObs != -1)
-            intervalEncoder->AddToken(abs(obs-prevObs));
+        {
+            int interval = abs(obs-prevObs);
+            if (interval > 6)
+                interval = 12-interval;
+            intervalEncoder->AddToken(interval);
+        }
         prevObs = obs;
         double featureVector[12+7];
         memcpy(&featureVector, &myEncoder->GetEncoding(), 12*8);
@@ -103,7 +108,7 @@ public:
             importSum += importance[i];
         }
         importSum = importSum;    // try magnitude of import vector
-        cout << importSum << " residual: " << myArt->GetResidual() << endl;
+//        cout << importSum << " residual: " << myArt->GetResidual() << endl;
         
         const double* w = myArt->GetWeights(0);
         OSCSend::getSingleton()->oscSend("/0", 19*2, w);
@@ -123,7 +128,10 @@ public:
             tempEncoder.Copy(myEncoder);    // copy the 'real' encoder's state
             tempEncoder.AddToken(i);        // add the proposed input
             tempIntEncoder.Copy(intervalEncoder);
-            tempIntEncoder.AddToken(abs(prevObs-i));
+            int interval = abs(i-prevObs);
+            if (interval > 6)
+                interval = 12-interval;
+            tempIntEncoder.AddToken(interval);
             
             double featureVec[19];
             memcpy(&featureVec, &tempEncoder.GetEncoding(), 12*8);
@@ -140,17 +148,17 @@ public:
             double importSum = 0.0;     // now calculate the importance vector, i.e. how boring something is.
             for (int j = 0; j < occurrences.size(); j++)
             {
-                mImportance[j] = fitVector[j]; // * (occurrences.at(j) / (double)inputCount);
+                mImportance[j] = fitVector[j] / occurrences.size(); // * (occurrences.at(j) / (double)inputCount);
                 importSum += mImportance[j];
             }
             importSum = importSum;    // try magnitude of import vector
             
             double res = myArt->GetResidual();
-            if (res > 10)      // it's creating a new category, so treat it seperately
+            if (res > 1)      // it's creating a new category, so treat it seperately
                 reward[i] = importSum * mySponteneity;
             else
                 reward[i] = importSum * res;               // here we want a lot of change * something boring, or minimal change * something new
-            cout << "predict cat " << cat << " produces " << res << ", reward: " << reward[i] << endl;
+//            cout << "predict cat " << cat << " produces " << res << ", reward: " << reward[i] << endl;
 //            rewardLR[i] = (1.0-importSum) * myArt->GetResidualLR();
         }
         OSCSend::getSingleton()->oscSend("/predictReward", 12, &reward[0]);
