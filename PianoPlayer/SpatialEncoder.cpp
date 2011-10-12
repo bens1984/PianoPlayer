@@ -1,3 +1,4 @@
+
 //
 //  SpatialEncoder.cpp
 //  PianoPlayer
@@ -9,7 +10,7 @@
 #include "SpatialEncoder.h"
 #include <string.h>
 
-SpatialEncoder::SpatialEncoder(const int& tokenCount) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.9)
+SpatialEncoder::SpatialEncoder(int tokenCount) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.9)
 {
     if (dimensions == 0)
         dimensions = 1;
@@ -22,9 +23,10 @@ SpatialEncoder::~SpatialEncoder()
     delete myEncoder;
 }
 
-void SpatialEncoder::AddToken(const int& token)
+void SpatialEncoder::AddToken(int token)
 {
-    if (token >= 0 && token < dimensions) {
+    if (dimensions > 0 && token >= 0) { // && token < dimensions) {
+        token = token % dimensions;
         DecayEncoding(decayAmount);
         myEncoder[token] = 1.0;
     } else

@@ -8,13 +8,14 @@
 
 #include "artCategory.h"
 #include <math.h>
+#include <iostream>
 
 ArtCategory::ArtCategory(int dim) : sum(0), committed(false), dimensions(dim*2)	// * 2 to use complement vector
 {
     weighting = new double[dimensions];
     for (int i = 0; i < dimensions; i++)
         weighting[i] = 1;	// can set higher than one to force deeper category search
-    sum = dim * 2;
+    sum = dimensions;
 }
 ArtCategory::~ArtCategory()
 {
@@ -22,7 +23,7 @@ ArtCategory::~ArtCategory()
 }
 
 // calculate the mChoice match factor for this category and the given input
-double ArtCategory::Choose(double input[], int size, double mChoice)
+double ArtCategory::Choose(const double* input, int size, double mChoice)
 {
     double minTotal = 0;
     for (int i = 0; i < size; i++)
@@ -30,7 +31,7 @@ double ArtCategory::Choose(double input[], int size, double mChoice)
     return minTotal / (mChoice + sum);
 }
 
-bool ArtCategory::mVigilance(double input[], int size, double mVigilance)
+bool ArtCategory::mVigilance(const double *input, int size, double mVigilance)
 {
     double minTotal = 0;
     double inputTotal = 0;
@@ -42,7 +43,7 @@ bool ArtCategory::mVigilance(double input[], int size, double mVigilance)
     
     return (minTotal / inputTotal >= mVigilance);
 }
-double ArtCategory::GetVigilance(double input[], int size)
+double ArtCategory::GetVigilance(const double *input, int size)
 {
     double minTotal = 0;
     double inputTotal = 0;
@@ -56,18 +57,18 @@ double ArtCategory::GetVigilance(double input[], int size)
 
 double ArtCategory::Learn(const double* input, int size, double mLearnRate)
 {
-    double *newWeighting = new double[dimensions];
+    double *newWeighting = new double[size];
     double residual = 0;
     if (!committed)
     {
         mLearnRate = 1;
         committed = true;
     }
-    double inverseLearnRate = 1.0f - mLearnRate;
+    double inverseLearnRate = 1.0 - mLearnRate;
     for (int i = 0; i < size; i++)
         newWeighting[i] = mLearnRate * (input[i] < weighting[i] ? input[i] : weighting[i]) + inverseLearnRate * weighting[i];
     // calculate residual
-    for (int i = 0; i < dimensions; i++)
+    for (int i = 0; i < size; i++)
     {
         residual += weighting[i] - newWeighting[i];
         weighting[i] = newWeighting[i];
@@ -87,11 +88,11 @@ double ArtCategory::GetResidual(const double* input, int size, double mLearnRate
     {
         mLearnRate = 1;
     }
-    double inverseLearnRate = 1.0f - mLearnRate;
+    double inverseLearnRate = 1.0 - mLearnRate;
     for (int i = 0; i < size; i++)
     {
         double min = (input[i] < weighting[i] ? input[i] : weighting[i]);
-        residual += weighting[i] - min; //(mLearnRate * min + inverseLearnRate * weighting[i]);
+        residual += weighting[i] - (mLearnRate * min + inverseLearnRate * weighting[i]);
     }
     
     return residual / (size * 0.5);
@@ -102,7 +103,7 @@ const double* ArtCategory::GetWeights()
     return weighting;
 }
 
-const double ArtCategory::distance(double input[])
+const double ArtCategory::distance(const double *input)
 {
     // take the not complemented part
     int featureLength = dimensions / 2;	// how many elements in the pre-complement coded vector?
@@ -121,15 +122,24 @@ const double ArtCategory::distance(double input[])
 }
 
 void ArtCategory::resizeCategory(int newSize)
-{
-    double *oldWeights = weighting;
-    weighting = new double[newSize];
-    memcpy(weighting, oldWeights, dimensions*8);
-    for (int i = dimensions; i < newSize; i+=2)
+{    
+    int newDim = newSize * 2;
+    if (newDim > dimensions)
     {
-        weighting[i] = 0.0;
-        weighting[i+1] = 1.0;       // this is specific to the RL, makes each new dimension learned at '0', rather than leaving it open (setting both of these values to 1)
+//        std::cout << "resizing " << dimensions << " " << newSize << std::endl;
+        double *newWeights = new double[newDim];
+        memcpy(newWeights, weighting, dimensions*8);
+        delete weighting;
+        for (int i = dimensions; i < newDim; i++)
+        {
+            newWeights[i] = 1.0;
+    //        newWeights[i+1] = 1.0;       // this is specific to the RL, makes each new dimension learned at '0', rather than leaving it open (setting both of these values to 1)
+        }
+        dimensions = newDim;
+        for (int i = 0; i < dimensions; i++)
+            sum += newWeights[i];
+
+        committed = false;
+        weighting = newWeights;
     }
-    dimensions = newSize;
-    delete oldWeights;
 }

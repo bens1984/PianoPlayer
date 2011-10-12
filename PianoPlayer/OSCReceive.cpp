@@ -40,6 +40,11 @@ void ExamplePacketListener::ProcessMessage( const osc::ReceivedMessage& m, const
             for (int i = 0; i < len; i++)
                 d->data.push_back((arg++)->AsFloat());	// the observed state
 			d->header = oscUpdate;
+        } else if( strcmp( m.AddressPattern(), "/spo") == 0 )	// this is a packet of feature data: /obs len x x x x
+		{
+            d = new OSCData;
+            d->data.push_back((arg++)->AsFloat());	// the observed state
+			d->header = oscSponteneity;
         } 
 		if (d != 0x00) //d.header != oscNothing)
 		{

@@ -41,11 +41,13 @@ int main (int argc, const char * argv[])
                 
                 cout << "Reward: " << IR << endl << endl;
                 OSCSend::getSingleton()->oscSend("/IR", 1, &IR);
+                
+                int nextStep = myRL->PredictMaximalInput();
+                OSCSend::getSingleton()->oscSend("/predict", 1, &nextStep);
+            } else if (data->header == oscSponteneity) {
+                myRL->SetSponteneity(data->data[0]);
             }
             delete data;
-            
-            int nextStep = myRL->PredictMaximalInput();
-            OSCSend::getSingleton()->oscSend("/predict", 1, &nextStep);
         }
     }    
 //    double* input = new double[6];

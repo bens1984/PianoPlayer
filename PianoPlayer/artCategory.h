@@ -23,17 +23,17 @@ public:
     ~ArtCategory();
     
     // calculate the mChoice match factor for this category and the given input
-    double Choose(double input[], int size, double mChoice);
+    double Choose(const double* input, int size, double mChoice);
     
-    bool mVigilance(double input[], int size, double mVigilance);
-    double GetVigilance(double input[], int size);
+    bool mVigilance(const double* input, int size, double mVigilance);
+    double GetVigilance(const double* input, int size);
     
     double Learn(const double* input, int size, double mLearnRate);
     double GetResidual(const double* input, int size, double mLearnRate);  // return the amount of change in the category if this input was learned with LearnRate=1
     
     const double* GetWeights();
     
-    const double distance(double input[]);
+    const double distance(const double* input);
     
     void resizeCategory(int newSize);
 };

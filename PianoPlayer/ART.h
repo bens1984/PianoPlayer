@@ -9,6 +9,7 @@
 
 #include "artCategory.h"
 #include <vector.h>
+#include "OSCSend.h"
 
 using namespace std;
 
@@ -39,21 +40,24 @@ private:
     inline void complementCode()
     {
         for (int i = 0; i < mDimensions*2; i+=2)	// create complement of input - complement coding
-            input[i+1] = 1.0f - input[i];
+            input[i+1] = 1.0 - input[i];
     }
-    void setInput(const double *_in, const int& size)
+    void setInput(const double *_in, int size)
     {
         if (size > mDimensions)
         {
+            mDimensions = size;
             if (input != 0x00)
                 delete input;
             input = new double(size*2);
-            mDimensions = size;
             for (int i = 0; i < mCategories.size(); i++)
-                mCategories.at(i)->resizeCategory(mDimensions*2);
+                mCategories.at(i)->resizeCategory(mDimensions);
         }
         for (int i = 0; i < size; i++)
+        {
             input[i*2] = _in[i];
+            input[i*2+1] = 1; //1.0 - _in[i];
+        }
     }
     
     //	set the mVigilance just high enough to reset the chosen category and look again.
@@ -80,7 +84,7 @@ private:
             choices = 0x00; //new double[0];
     }
 public:
-    ART(int dimensions, double _choice, double _learnRate, double _Vigilance) : mDimensions(dimensions), residual(0)
+    ART(double _choice, double _learnRate, double _Vigilance) : mDimensions(19), residual(0)
     {
         mCategories.push_back(new ArtCategory(mDimensions));
 //        mCount.push_back(0);
@@ -97,9 +101,9 @@ public:
         for (int i = 0; i < mCategories.size(); i++)
             delete mCategories.at(i);
     }
-    void ProcessNewObservation(const double *list, const int& length)
+    void ProcessNewObservation(const double *input, int length)
     {
-        setInput(list, length);
+        setInput(input, length);
         normalizeInput();
         complementCode();
         FillCategoryChoice();
@@ -160,12 +164,10 @@ public:
             {          // if above vigilence then learn from it
                 if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// learn!
                 {
+                    OSCSend::getSingleton()->oscSend("/in", mDimensions*2, input);
                     residual = mCategories.at(maxIndex)->Learn(input,mDimensions*2,mLearnRate); //learn
                     if (maxIndex == mCategories.size()-1)	// committed the previous uncommitted category, so add a new blank one.
-                    {	
                         mCategories.push_back(new ArtCategory(mDimensions));
-//                        mCount.push_back(0);
-                    }
                     chosen = true;
                     recentChoice = maxIndex;
                 }
@@ -207,7 +209,7 @@ public:
                 if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
                 {
                     if (maxIndex == mCategories.size()-1)   // it would be a new category
-                        residual = 1.0 / (mDimensions);   // new categories are too chaotic for us to privilege
+                        residual = mDimensions;   // new categories are too chaotic for us to privilege
                     else
                         residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,mLearnRate); // <- figure out how much residual would occur
                     chosen = true;
@@ -240,6 +242,12 @@ public:
         double *weights = new double[mCategories.size()*mDimensions*2];
         for (int i = 0; i < mCategories.size(); i++)
             memcpy(weights+(i*mDimensions*2), mCategories.at(i)->GetWeights(), mDimensions*2*8);
+        return weights;
+    }
+    const double* GetWeights(int index)
+    {
+        double *weights = new double[mDimensions*2];
+        memcpy(weights, mCategories.at(index)->GetWeights(), mDimensions*2*8);
         return weights;
     }
 };

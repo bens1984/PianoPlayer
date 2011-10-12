@@ -17,7 +17,8 @@ using namespace std;
 enum OSCCommands
 {
 	oscNothing,
-	oscUpdate
+	oscUpdate,
+    oscSponteneity
 };
 
 struct OSCData

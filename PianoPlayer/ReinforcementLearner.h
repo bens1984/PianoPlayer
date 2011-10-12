@@ -27,11 +27,14 @@
 
 #include "OSCSend.h"
 
+#define NEW_THRESHOLD 0.001          // how mush residual a new category creation is "worth". When the predictor can't find
+                                    // a known category with this much residual it will then consider creating new categories
+
 
 class ReinforcementLearner
 {
 private:
-    SpatialEncoder *myEncoder;
+    SpatialEncoder *myEncoder, *intervalEncoder;
     ART *myArt;
     int inputCount; // how many inputs we have fed into the ART
     vector<int> occurrences;    // how many time each category has been observed
@@ -42,17 +45,20 @@ private:
     double *importance;
     int chosenCategory;
     double distance;
+    int prevObs;    // previous pitch input
+    double mySponteneity;
     
 public:
-    ReinforcementLearner() /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/ : fitVector(0x00), importance(0x00), inputCount(0)
+    ReinforcementLearner() /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/ : fitVector(0x00), importance(0x00), inputCount(0), prevObs(-1), mySponteneity(NEW_THRESHOLD/19.0)
     {
 //        mDimensions = (dimensions > 0 ? dimensions : 1);
 //        mLearnRate = (_learnRate != 0 ? _learnRate : 0.5);
 //        mChoice = _choice;
 //        mVigilance = _Vigilance;
         
-        myArt = new ART(1, 0, 0.1, 0.9);    // initial feature vector dimensions, choice, learning rate, vigilance
-        myEncoder = new SpatialEncoder(12);
+        myArt = new ART(0, 0.1, 0.95);    // params: choice, learning rate, vigilance
+        myEncoder = new SpatialEncoder(12);     // for encoding pitch inputs
+        intervalEncoder = new SpatialEncoder(7);        // for encoding intervals
         std::cout << "ReinforcementLearner -- ©2010 Benjamin Smith\n";
 //        std::cout << " init with Dimensions: " << dimensions << ", Choice: " << _choice <<
 //            ", Learn Rate: " << mLearnRate << ", Vigilance: " << _Vigilance << std::endl;
@@ -66,9 +72,15 @@ public:
     double ProcessNewObservation(const int& obs)  // this is the next pitch that is observed
     {
         myEncoder->AddToken(obs);       // spatially encode the input
-        OSCSend::getSingleton()->oscSend("/stm", 12, &myEncoder->GetEncoding());
+        if (prevObs != -1)
+            intervalEncoder->AddToken(abs(obs-prevObs));
+        prevObs = obs;
+        double featureVector[12+7];
+        memcpy(&featureVector, &myEncoder->GetEncoding(), 12*8);
+        memcpy(&featureVector[12], &intervalEncoder->GetEncoding(), 7*8);
+        OSCSend::getSingleton()->oscSend("/stm", 19, &featureVector[0]);
         
-        myArt->ProcessNewObservation(&myEncoder->GetEncoding(), 12);    // add it to the ART
+        myArt->ProcessNewObservation(&featureVector[0], 19);    // add it to the ART
         if (fitVector != 0x00)
             delete fitVector;
         fitVector = myArt->GetCategoryChoice(); // get the resonance of each category against this input.
@@ -87,11 +99,15 @@ public:
         importance = new double[occurrences.size()];
         for (int i = 0; i < occurrences.size(); i++)
         {
-            importance[i] = fitVector[i] * (occurrences.at(i) / (double)inputCount);
+            importance[i] = fitVector[i]; // * (occurrences.at(i) / (double)inputCount);
             importSum += importance[i];
         }
         importSum = importSum;    // try magnitude of import vector
         cout << importSum << " residual: " << myArt->GetResidual() << endl;
+        
+        const double* w = myArt->GetWeights(0);
+        OSCSend::getSingleton()->oscSend("/0", 19*2, w);
+        delete w;
         
         return importSum * myArt->GetResidual();  // this is the intrinsic reward for observing this input!
     }
@@ -101,13 +117,20 @@ public:
         double mImportance[occurrences.size()];
         double reward[12]; //, rewardLR[12];      // hold the potential reward for each of our proposals
         SpatialEncoder tempEncoder(12);
+        SpatialEncoder tempIntEncoder(7);
         for (int i = 0; i < 12; i++)    // try each of the pitches
         {
             tempEncoder.Copy(myEncoder);    // copy the 'real' encoder's state
             tempEncoder.AddToken(i);        // add the proposed input
+            tempIntEncoder.Copy(intervalEncoder);
+            tempIntEncoder.AddToken(abs(prevObs-i));
+            
+            double featureVec[19];
+            memcpy(&featureVec, &tempEncoder.GetEncoding(), 12*8);
+            memcpy(&featureVec[12], &tempIntEncoder.GetEncoding(), 7*8);
 //            OSCSend::getSingleton()->oscSend("/tempEncoding", 12, &tempEncoder.GetEncoding());
             
-            myArt->ProcessNewObservation(&tempEncoder.GetEncoding(), 12);  // stick it in the ART and let it think about it.
+            myArt->ProcessNewObservation(&featureVec[0], 19);  // stick it in the ART and let it think about it.
             if (fitVector != 0x00)
                 delete fitVector;
             fitVector = myArt->GetCategoryChoice();                         // get the resonance of each category
@@ -117,13 +140,16 @@ public:
             double importSum = 0.0;     // now calculate the importance vector, i.e. how boring something is.
             for (int j = 0; j < occurrences.size(); j++)
             {
-                mImportance[j] = fitVector[j] * (occurrences.at(j) / (double)inputCount);
+                mImportance[j] = fitVector[j]; // * (occurrences.at(j) / (double)inputCount);
                 importSum += mImportance[j];
             }
             importSum = importSum;    // try magnitude of import vector
             
             double res = myArt->GetResidual();
-            reward[i] = importSum * res;               // here we want a lot of change to something boring, or minimal change to something new
+            if (res > 10)      // it's creating a new category, so treat it seperately
+                reward[i] = importSum * mySponteneity;
+            else
+                reward[i] = importSum * res;               // here we want a lot of change * something boring, or minimal change * something new
             cout << "predict cat " << cat << " produces " << res << ", reward: " << reward[i] << endl;
 //            rewardLR[i] = (1.0-importSum) * myArt->GetResidualLR();
         }
@@ -171,6 +197,10 @@ public:
     double GetDistance()
     {
         return myArt->calcDistance(chosenCategory);
+    }
+    void SetSponteneity(double s)
+    {
+        mySponteneity = s / 19.0;   // divide by the number of feature vector dimensions
     }
     // ----------------------------S
 //    void outputInitialWeights(double *choices)

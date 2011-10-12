@@ -25,10 +25,10 @@ private:
     double      decayAmount;
     DecayModel  myDecay;
 public:
-    SpatialEncoder(const int& tokenCount);
+    SpatialEncoder(int tokenCount);
     ~SpatialEncoder();
     
-    void AddToken(const int& token);
+    void AddToken(int token);
     void DecayEncoding(const double& scalar);
     
     const double& GetEncoding();
