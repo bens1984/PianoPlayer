@@ -198,7 +198,7 @@ public:
         {
             // find largest match value
             double max = 0;
-            for (int i = 0; i < mCategories.size(); i++)
+            for (int i = 0; i < mCategories.size()-1; i++)  // -1 to ignore the possibility of creating a new category, for now.
                 if (choices[i] > max)
                 {
                     max = choices[i];
@@ -211,7 +211,7 @@ public:
                     if (maxIndex == mCategories.size()-1)   // it would be a new category
                         residual = mDimensions;   // new categories are too chaotic for us to privilege
                     else
-                        residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,mLearnRate); // <- figure out how much residual would occur
+                        residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,1.0); //mLearnRate); // <- figure out how much residual would occur
                     chosen = true;
                     recentChoice = maxIndex;
                 }

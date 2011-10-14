@@ -56,7 +56,7 @@ public:
 //        mChoice = _choice;
 //        mVigilance = _Vigilance;
         
-        myArt = new ART(0, 0.9, 0.925);    // params: choice, learning rate, vigilance
+        myArt = new ART(0, 0.5, 0.925);    // params: choice, learning rate, vigilance
         myEncoder = new SpatialEncoder(12);     // for encoding pitch inputs
         intervalEncoder = new SpatialEncoder(7);        // for encoding intervals
         std::cout << "ReinforcementLearner -- ©2010 Benjamin Smith\n";
@@ -157,7 +157,7 @@ public:
             if (res > 1)      // it's creating a new category, so treat it seperately
                 reward[i] = importSum * mySponteneity;
             else
-                reward[i] = importSum * res;               // here we want a lot of change * something boring, or minimal change * something new
+                reward[i] = res * importSum; //1.0 - fabs(0.07 - res); // * importSum;               // here we want a lot of change * something boring, or minimal change * something new
 //            cout << "predict cat " << cat << " produces " << res << ", reward: " << reward[i] << endl;
 //            rewardLR[i] = (1.0-importSum) * myArt->GetResidualLR();
         }
