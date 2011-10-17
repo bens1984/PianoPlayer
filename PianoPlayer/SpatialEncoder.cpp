@@ -23,14 +23,36 @@ SpatialEncoder::~SpatialEncoder()
     delete myEncoder;
 }
 
+void SpatialEncoder::DoEncoding(int token)
+{
+    if (dimensions > 0 && token >= 0) // && token < dimensions) {
+    {
+        AddToken(token);
+        DecayEncoding(decayAmount);
+    }
+}
+void SpatialEncoder::DoEncoding(int* tokens, int size)
+{
+    if (dimensions > 0) // && token < dimensions) {
+    {
+        for (int i = 0; i < size; i++)
+            AddToken(tokens[i]);
+        DecayEncoding(decayAmount);
+    }
+}
 void SpatialEncoder::AddToken(int token)
 {
     if (dimensions > 0 && token >= 0) { // && token < dimensions) {
         token = token % dimensions;
-        DecayEncoding(decayAmount);
         myEncoder[token] = 1.0;
     } else
         cout << "Warning: SpatialEncoder::AddToken: '" << token << "' token out of range. " << dimensions << endl;
+}
+
+void SpatialEncoder::AddToken(int* token, int size)    // input several tokens at once
+{
+    for (int i = 0; i < size; i++)
+        AddToken(token[i]);
 }
 
 void SpatialEncoder::DecayEncoding(const double& scalar)

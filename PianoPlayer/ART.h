@@ -44,7 +44,7 @@ private:
     }
     void setInput(const double *_in, int size)
     {
-        if (size > mDimensions)
+        if (size > 0 && size > mDimensions)
         {
             mDimensions = size;
             if (input != 0x00)
@@ -73,18 +73,20 @@ private:
     void FillCategoryChoice()
     {
         if (choices != 0x00)
+        {
             delete choices;
+            choices = 0x00;
+        }
         // check against all existing categories, and 1 empty one
-        if (mDimensions > 0)
+        if (mDimensions > 0 && mCategories.size() > 0)
         {
             choices = new double[mCategories.size()];
             for (int i = 0; i < mCategories.size(); i++)
                 choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice);
-        } else
-            choices = 0x00; //new double[0];
+        }
     }
 public:
-    ART(double _choice, double _learnRate, double _Vigilance) : mDimensions(19), residual(0)
+    ART(double _choice, double _learnRate, double _Vigilance) : mDimensions(19), residual(0), choices(0x00)
     {
         mCategories.push_back(new ArtCategory(mDimensions));
 //        mCount.push_back(0);
@@ -100,6 +102,10 @@ public:
     {
         for (int i = 0; i < mCategories.size(); i++)
             delete mCategories.at(i);
+        if (input != 0x00)
+            delete input;
+        if (choices != 0x00)
+            delete choices;
     }
     void ProcessNewObservation(const double *input, int length)
     {
@@ -127,9 +133,12 @@ public:
     
     const double* GetCategoryChoice()
     {
-        double* ret = new double[mCategories.size()];
-        memcpy(ret, choices, mCategories.size()*8);
-        return ret;
+        if (mCategories.size() > 0)
+        {
+            double* ret = new double[mCategories.size()];
+            memcpy(ret, choices, mCategories.size()*8);
+            return ret;
+        } else return 0x00;
     }
 //    const double* GetImportance()
 //    {
@@ -166,7 +175,7 @@ public:
                 {
                     OSCSend::getSingleton()->oscSend("/in", mDimensions*2, input);
                     residual = mCategories.at(maxIndex)->Learn(input,mDimensions*2,mLearnRate); //learn
-                    if (maxIndex == mCategories.size()-1)	// committed the previous uncommitted category, so add a new blank one.
+                    while (maxIndex >= mCategories.size()-1)	// committed the previous uncommitted category, so add a new blank one.
                         mCategories.push_back(new ArtCategory(mDimensions));
                     chosen = true;
                     recentChoice = maxIndex;
@@ -246,8 +255,11 @@ public:
     }
     const double* GetWeights(int index)
     {
-        double *weights = new double[mDimensions*2];
-        memcpy(weights, mCategories.at(index)->GetWeights(), mDimensions*2*8);
-        return weights;
+        if (mDimensions > 0)
+        {
+            double *weights = new double[mDimensions*2];
+            memcpy(weights, mCategories.at(index)->GetWeights(), mDimensions*2*8);
+            return weights;
+        } else return 0x00;
     }
 };

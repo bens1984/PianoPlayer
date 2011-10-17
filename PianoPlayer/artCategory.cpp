@@ -12,7 +12,8 @@
 
 ArtCategory::ArtCategory(int dim) : sum(0), committed(false), dimensions(dim*2)	// * 2 to use complement vector
 {
-    weighting = new double[dimensions];
+    if (dimensions > 0)
+        weighting = new double[dimensions];
     for (int i = 0; i < dimensions; i++)
         weighting[i] = 1;	// can set higher than one to force deeper category search
     sum = dimensions;
@@ -57,28 +58,31 @@ double ArtCategory::GetVigilance(const double *input, int size)
 
 double ArtCategory::Learn(const double* input, int size, double mLearnRate)
 {
-    double *newWeighting = new double[size];
-    double residual = 0;
-    if (!committed)
+    if (size > 0)
     {
-        mLearnRate = 1;
-        committed = true;
-    }
-    double inverseLearnRate = 1.0 - mLearnRate;
-    for (int i = 0; i < size; i++)
-        newWeighting[i] = mLearnRate * (input[i] < weighting[i] ? input[i] : weighting[i]) + inverseLearnRate * weighting[i];
-    // calculate residual
-    for (int i = 0; i < size; i++)
-    {
-        residual += weighting[i] - newWeighting[i];
-        weighting[i] = newWeighting[i];
-    }
-    sum = 0;	// now update the total for this category
-    for (int i = 0; i < dimensions; i++)
-        sum += weighting[i];
-    delete newWeighting;
-    
-    return residual / (size * 0.5);
+        double *newWeighting = new double[size];
+        double residual = 0;
+        if (!committed)
+        {
+            mLearnRate = 1;
+            committed = true;
+        }
+        double inverseLearnRate = 1.0 - mLearnRate;
+        for (int i = 0; i < size; i++)
+            newWeighting[i] = mLearnRate * (input[i] < weighting[i] ? input[i] : weighting[i]) + inverseLearnRate * weighting[i];
+        // calculate residual
+        for (int i = 0; i < size; i++)
+        {
+            residual += weighting[i] - newWeighting[i];
+            weighting[i] = newWeighting[i];
+        }
+        sum = 0;	// now update the total for this category
+        for (int i = 0; i < dimensions; i++)
+            sum += weighting[i];
+        delete newWeighting;
+        
+        return residual / (size * 0.5);
+    } else return -1;
 }
 double ArtCategory::GetResidual(const double* input, int size, double mLearnRate)  // return the amount of change in the category if this input was learned with LearnRate=1
 {
@@ -133,7 +137,8 @@ void ArtCategory::resizeCategory(int newSize)
         for (int i = dimensions; i < newDim; i++)
         {
             newWeights[i] = 1.0;
-    //        newWeights[i+1] = 1.0;       // this is specific to the RL, makes each new dimension learned at '0', rather than leaving it open (setting both of these values to 1)
+            newWeights[i+1] = 1.0;       // setting both to 1 makes the dimension "unknown". Any input will "match"
+            // this is specific to the RL, makes each new dimension learned at '0', rather than leaving it open (setting both of these values to 1)
         }
         dimensions = newDim;
         for (int i = 0; i < dimensions; i++)

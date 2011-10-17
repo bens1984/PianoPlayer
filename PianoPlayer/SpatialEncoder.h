@@ -28,7 +28,11 @@ public:
     SpatialEncoder(int tokenCount);
     ~SpatialEncoder();
     
+    void DoEncoding(int token);
+    void DoEncoding(int* tokens, int size);
+    
     void AddToken(int token);
+    void AddToken(int* tokens, int size);    // input several tokens at once
     void DecayEncoding(const double& scalar);
     
     const double& GetEncoding();

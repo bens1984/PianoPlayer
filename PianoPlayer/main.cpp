@@ -27,7 +27,7 @@ int main (int argc, const char * argv[])
         OSCData* data = myOSC.ReadAPacket();
         if (data != 0x00)
         {
-            if (data->header == oscUpdate) {
+            if (data->header == oscUpdate && data->data.size() > 0) {
                 double *input = new double[data->data.size()];
                 for (int i = 0; i < data->data.size(); i++)
                     input[i] = data->data[i];
