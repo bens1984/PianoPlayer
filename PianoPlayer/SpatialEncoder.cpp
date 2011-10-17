@@ -10,11 +10,11 @@
 #include "SpatialEncoder.h"
 #include <string.h>
 
-SpatialEncoder::SpatialEncoder(int tokenCount) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.9)
+SpatialEncoder::SpatialEncoder(int tokenCount) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.8)
 {
     if (dimensions == 0)
-        dimensions = 1;
-    myEncoder = new double[dimensions];
+        dimensions = 2;
+    myEncoder = (double*)malloc(dimensions*sizeof(double)); //new double[dimensions];
     for (int i = 0; i < dimensions; i++)
         myEncoder[i] = 0;
 }
@@ -27,17 +27,17 @@ void SpatialEncoder::DoEncoding(int token)
 {
     if (dimensions > 0 && token >= 0) // && token < dimensions) {
     {
-        AddToken(token);
         DecayEncoding(decayAmount);
+        AddToken(token);
     }
 }
 void SpatialEncoder::DoEncoding(int* tokens, int size)
 {
     if (dimensions > 0) // && token < dimensions) {
     {
+        DecayEncoding(decayAmount);
         for (int i = 0; i < size; i++)
             AddToken(tokens[i]);
-        DecayEncoding(decayAmount);
     }
 }
 void SpatialEncoder::AddToken(int token)
@@ -70,9 +70,9 @@ void SpatialEncoder::DecayEncoding(const double& scalar)
     }
 }
 
-const double& SpatialEncoder::GetEncoding()
+double* SpatialEncoder::GetEncoding()
 {
-    return *myEncoder;
+    return myEncoder;
 }
 int SpatialEncoder::GetDimensions()
 {
@@ -101,5 +101,5 @@ void SpatialEncoder::Copy(SpatialEncoder* that) {
     myDecay = that->GetDecayModel();
     delete myEncoder;   // clean up old encoder space
     myEncoder = new double[dimensions];
-    std::memcpy(myEncoder, &(that->GetEncoding()), dimensions*8);
+    std::memcpy(myEncoder, that->GetEncoding(), dimensions*sizeof(double));
 }

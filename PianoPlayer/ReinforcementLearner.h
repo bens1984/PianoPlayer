@@ -27,7 +27,7 @@
 
 #include "OSCSend.h"
 
-#define NEW_THRESHOLD 0.001          // how mush residual a new category creation is "worth". When the predictor can't find
+#define NEW_THRESHOLD 0.1          // how mush residual a new category creation is "worth". When the predictor can't find
                                     // a known category with this much residual it will then consider creating new categories
 
 
@@ -35,7 +35,10 @@ class ReinforcementLearner
 {
 private:
     SpatialEncoder *myEncoder, *intervalEncoder, *othersEncoder;
+    SpatialEncoder *tempEncoder, *tempIntEncoder, *tempOtherEncoder;
     ART *myArt;
+    ART *upperArt;  // a 2nd ART to watch the transitions between myArt's categories
+    double * featureVector;
     int inputCount; // how many inputs we have fed into the ART
     vector<int> occurrences;    // how many time each category has been observed
 //    int mDimensions;

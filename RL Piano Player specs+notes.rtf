@@ -1,0 +1,56 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf360
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww9100\viewh9200\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f0\fs24 \cf0 Specs for Reinforcement Learner\
+\
+Three components:\
+\
+0) pre-processing\
+1) observer, compressor, predictor\
+2) intrinsic reward calculator\
+3) RL 'agent' that can take actions to maximize intrinsic reward\
+\
+0) watch pitch class, interval class, register, change in register, \
+\
+1) ART to catch categories. Count observations for each category. Report learning mismatch (how much the category would change to fully incorporate it).\
+	ART at a higher level. Look at: resonance distances, sequence of categories, pattern of normalized category IDs (ACAF becomes 0102).\
+\
+2) intrinsic reward maximized with modification (learning) of a category with high resonance (across the whole resonance vector), weighted by observation frequency. The learning of a new category that is close to something we've seen a lot is exciting, learning of new categories that are alone is not.\
+	Calculate resonance vector magnitude where each resonance measure is modified by the individual observation count (under a given threshold? 1-1/count? Some sort of curve here to model a sense of "novelty").\
+	For each input: get resonance and novelty. compare to each category and get resonance, weighted by occurrence (normalized). Calculate novelty as mismatch with the chosen category (I don't think this needs to be done with all categories, resonance should catch that).\
+	When a new category is created it is only as valuable as it is relative to other known categories (if it borders a known category it is very valuable, if it is alone it is not). No residual matches are not valuable (0 reward). Ideal is some residual with highly resonant categories.\
+\
+2b) extrinsic reward can be injected at any point. This should reinforce the agent's decisions in (3).\
+\
+3) actions that are taken need to be matched to reward received. Don't want it to just repeat those actions, it needs to understand what it did that was new, what changes it brought about and how to effect those changes again.\
+\
+\
+=======\
+Dev Notes:\
+9/30\
+	added the capability for the ART categories to extend if more input dimensions are added. This allows one ART to watch the resonance vector of another. Thus when the first ART learns a new category the second can tell us if it is distant to what we've seen or close, and parse this into some number of new categories. Now I can watch the learning residual at both levels and compile some sense of learning/novelty/boredom.\
+	also watch the unweighted resonance vector, it may contain additional, useful information.\
+	Is the decay function of the resonance(category) weighting appropriate? Should it just be a total count, or add a bit and normalize (i.e. steady decay)? Or do we want a total resonance for that category (so even if it's never seen but its neighbors are seen a lot it becomes stronger)\'96I think this would just compound the divergence, and is already taken into account in the resonance*obs_count vector.\
+	How can 3) know what produced more reward and do that again, but in new directions?\
+	Some amount of random flailing around might work, for a while (just as a baby tries everything). Perhaps this is a last resort to locate new things to learn. What else? Start with a known state and move in a direction, see if it is more interesting?\
+	Need some way to correlate outputs (controls into the world) with observed world states. Is this where EM or DBN work comes in? Then the agent could recall outputs given a proposed world state.\
+	Try: have each level of the RL network observe control/reward pairs and track them. Then at any point a search can be performed to obtain the best next step. At the base level this will simply be a matter of repeating rewarding controls until they are no longer rewarding (i.e. listen to a melody until it is boring). At the next level it will learn simple transformations (augmentation, transposition, etc.).\
+\
+10/11\
+	I realized that if the space of all inputs is known then the model can test every potential input and predict (know) the reward it would receive if that input comes next. Then remains the problem of bringing that input about (which may be trivial in our toy cases, but hard in real ones). Also, it may run into problems of choosing local maxima (but this may not be a problem either\'85 I'm not sure what the logic is here yet).\
+	Should it predict based on the total amount that could be learned from a new input, or how much will actually be learned (as in, how much the ART category will change based on its current Learning Rate parameter?) Is there a difference, really? The most amount that could be learned will translate into the most amount that is learned, even if the learning rate is 10% (or any percent). I set the learning rate low, typically, to encourage some repetition of categories\'85 I will test both ways and see what happens. I still don't think that incorporating the actual learning rate is important here, but I could be wrong.\
+\
+	It now thinks that creating a new category is awesome, so it tries at every turn (because the residual is huge). How should this be handled? At some point creating a new category is necessary, but should only be chosen if it's more interesting then repeating a category and learning a little bit from it.\
+	I hardcoded the residual from a new category, since it is a ridiculous spike otherwise. What should this value be, or is there a smarter way to handle it?\
+\
+	sometimes a SpatialEncoder is not being assigned in ProcessInput\'85 how does that happen?\
+\
+	I want it to play with known categories a little longer, then stray away, then work with what it knows, gradually incorporating the new material. Then diverge again, then work it in but maybe in a new direction. At the moment it gets really bored fast and then heads off willy-nilly.\
+	Need to add interval classes right away, which will make its choices a little more coherent.\
+\
+10/12/2011\
+\
+	Maximize actual learned residual, and use resonance as a tie breaker. In the case of new categories use resonance with known categories as the tie breaker. How should new categories vs. residual be compared?}

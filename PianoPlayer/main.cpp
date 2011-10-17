@@ -28,16 +28,16 @@ int main (int argc, const char * argv[])
         if (data != 0x00)
         {
             if (data->header == oscUpdate && data->data.size() > 0) {
-                double *input = new double[data->data.size()];
-                for (int i = 0; i < data->data.size(); i++)
-                    input[i] = data->data[i];
+//                double *input = new double[data->data.size()];
+//                for (int i = 0; i < data->data.size(); i++)
+//                    input[i] = data->data[i];
 //                cout << "input: ";
 //                for (int i = 0; i < 6; i++)
 //                    cout << input[i] << " ";
 //                cout << endl;
-                float IR = myRL->ProcessNewObservation(input[0]); //, data.data.size());
+                float IR = myRL->ProcessNewObservation(data->data[0]); //, data.data.size());
 //               cout << "Category: " << myRL->GetChosenCategory() << " distance: " << myRL->GetDistance() << endl;
-                delete input;
+//                delete input;
                 
 //               cout << "Reward: " << IR << endl << endl;
                 OSCSend::getSingleton()->oscSend("/IR", 1, &IR);
@@ -47,8 +47,9 @@ int main (int argc, const char * argv[])
             } else if (data->header == oscSponteneity) {
                 myRL->SetSponteneity(data->data[0]);
             } else if (data->header == oscReset) {
-                delete myRL;
+                ReinforcementLearner* oldRL = myRL;
                 myRL = new ReinforcementLearner();
+                delete oldRL;
             }
             delete data;
         }

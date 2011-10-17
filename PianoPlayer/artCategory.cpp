@@ -14,6 +14,7 @@ ArtCategory::ArtCategory(int dim) : sum(0), committed(false), dimensions(dim*2)	
 {
     if (dimensions > 0)
         weighting = new double[dimensions];
+    else weighting = 0x00;
     for (int i = 0; i < dimensions; i++)
         weighting[i] = 1;	// can set higher than one to force deeper category search
     sum = dimensions;
@@ -30,6 +31,27 @@ double ArtCategory::Choose(const double* input, int size, double mChoice)
     for (int i = 0; i < size; i++)
         minTotal += (input[i] < weighting[i] ? input[i] : weighting[i]);
     return minTotal / (mChoice + sum);
+}
+double ArtCategory::Choose(const double* input, int size, double mChoice, vector<ResonanceGroup>& resonanceWeights)
+{
+    double minTotal = 0;
+    double mySum = 0;
+    for (int i = 0; i < resonanceWeights.size(); i++)
+    {
+        double tempMin = 0;
+        double tempSum = 0;
+        for (int j = resonanceWeights.at(i).startIndex; j < resonanceWeights.at(i).startIndex+resonanceWeights.at(i).length; j++)
+        {
+            tempMin += (input[j] < weighting[j] ? input[j] : weighting[j]);
+            tempSum += weighting[j];
+        }
+        if (resonanceWeights.at(i).length > 0)
+        {
+            minTotal += (tempMin / resonanceWeights.at(i).length) * resonanceWeights.at(i).weight;
+            mySum += (tempSum / resonanceWeights.at(i).length) * resonanceWeights.at(i).weight;
+        }
+    }
+    return minTotal / (mChoice + mySum);
 }
 
 bool ArtCategory::mVigilance(const double *input, int size, double mVigilance)
@@ -132,12 +154,15 @@ void ArtCategory::resizeCategory(int newSize)
     {
 //        std::cout << "resizing " << dimensions << " " << newSize << std::endl;
         double *newWeights = new double[newDim];
-        memcpy(newWeights, weighting, dimensions*8);
-        delete weighting;
+        if (weighting != 0x00)
+        {
+            memcpy(newWeights, weighting, dimensions*sizeof(double));
+            delete weighting;
+        }
         for (int i = dimensions; i < newDim; i++)
         {
             newWeights[i] = 1.0;
-            newWeights[i+1] = 1.0;       // setting both to 1 makes the dimension "unknown". Any input will "match"
+//            newWeights[i+1] = 1.0;       // setting both to 1 makes the dimension "unknown". Any input will "match"
             // this is specific to the RL, makes each new dimension learned at '0', rather than leaving it open (setting both of these values to 1)
         }
         dimensions = newDim;

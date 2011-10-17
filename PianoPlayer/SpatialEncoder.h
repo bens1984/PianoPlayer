@@ -35,7 +35,7 @@ public:
     void AddToken(int* tokens, int size);    // input several tokens at once
     void DecayEncoding(const double& scalar);
     
-    const double& GetEncoding();
+    double* GetEncoding();
     int GetDimensions();
     double GetDecayAmount();
     DecayModel GetDecayModel();

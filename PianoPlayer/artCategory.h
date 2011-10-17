@@ -9,6 +9,15 @@
 
 #include <Math.h>
 #include <string.h>
+#include <vector.h>
+
+struct ResonanceGroup {    // a rough way to set relative modifiers for different sub-groups of features in the STM
+    int startIndex, length;
+    double weight;
+    
+    ResonanceGroup(int _in, int _size, double _weight) : startIndex(_in), length(_size), weight(_weight)
+    { }
+};
 
 class ArtCategory
 {
@@ -24,6 +33,7 @@ public:
     
     // calculate the mChoice match factor for this category and the given input
     double Choose(const double* input, int size, double mChoice);
+    double Choose(const double* input, int size, double mChoice, vector<ResonanceGroup>& resonanceWeights);
     
     bool mVigilance(const double* input, int size, double mVigilance);
     double GetVigilance(const double* input, int size);
