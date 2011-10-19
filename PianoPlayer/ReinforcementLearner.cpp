@@ -12,7 +12,7 @@
 
 ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), inputCount(0), prevObs(-1), mySponteneity(NEW_THRESHOLD/28.0) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    myArt = new ART(0, 0.9, 0.975);    // params: choice, learning rate, vigilance
+    myArt = new ART(0, 0.1, 0.9);    // params: choice, learning rate, vigilance
     myArt->AddResonanceGroup(0, 12, 0.5);   // tell it about the pitch group
     myArt->AddResonanceGroup(12, 7, 0.5);   // tell it about the interval group
     myArt->AddResonanceGroup(19, 8, 1.0);   // tell it about the "others" group
