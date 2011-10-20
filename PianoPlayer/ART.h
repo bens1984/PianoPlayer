@@ -44,6 +44,7 @@ public:
     void setChoice(double v);
     double GetResidual();
     const double* GetCategoryChoice();
+    int GetCategoryCount(); // how many categories?
     
     void AddResonanceGroup(int startIndex, int groupSize, double weight);
 

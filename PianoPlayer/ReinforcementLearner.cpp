@@ -6,13 +6,15 @@
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
-#define IMPORTANCE_FACTOR 0.25       // the exponent for the importance vs residual measure
+#define IMPORTANCE_FACTOR 1.0       // the exponent for the importance vs residual measure
+
+#define RECENCY_DECAY_RATE  0.975     // how quickly the recency vector decays. This is how quickly ideas become familiar and no longer fresh
 
 #include "ReinforcementLearner.h"
 
-ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), inputCount(0), prevObs(-1), mySponteneity(NEW_THRESHOLD/28.0) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
+ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/28.0), recencyTotal(0.0) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    myArt = new ART(0, 0.1, 0.9);    // params: choice, learning rate, vigilance
+    myArt = new ART(0, 0.8, 0.9);    // params: choice, learning rate, vigilance
     myArt->AddResonanceGroup(0, 12, 0.5);   // tell it about the pitch group
     myArt->AddResonanceGroup(12, 7, 0.5);   // tell it about the interval group
     myArt->AddResonanceGroup(19, 8, 1.0);   // tell it about the "others" group
@@ -72,35 +74,37 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
 //    if (fitVector != 0x00)
 //        delete fitVector;
     fitVector = myArt->GetCategoryChoice(); // get the resonance of each category against this input.
+    int fitSize = myArt->GetCategoryCount();    // how long the fitVector is
     //        importance = myArt->GetImportance();
     
     chosenCategory = myArt->makeChoice();	// make a choice and learn from it. This modifies the resonances, so the must be received first
     
-    inputCount += 1;                        // count up this input
-    while (occurrences.size() < chosenCategory+1)
-        occurrences.push_back(0);
-    occurrences.at(chosenCategory) += 1;
+    while (occurrences.size() < fitSize)
+        occurrences.push_back(0.0);
+    while (recency.size() < fitSize)
+        recency.push_back(0.0);
+    recencyTotal = 0.0;
+    for (int i = 0; i < fitSize; i++)
+    {
+        occurrences.at(i) += fitVector[i];
+        occurrencesTotal += fitVector[i];
+        recency.at(i) += fitVector[i];
+        recency.at(i) *= RECENCY_DECAY_RATE;
+        recencyTotal += recency.at(i);      // could also consider recencyMax here, to get a vector with max dimension of 1 rather than Unity vector...
+    }
     
     double importSum = 0.0;
-//    if (importance != 0x00)                 // now calculate the importance vector
-//        delete importance;
     if (occurrences.size() > 0)
     {
-//        importance = new double[occurrences.size()];
         for (int i = 0; i < occurrences.size(); i++)
         {
 //            importance[i] = fitVector[i]; // * (occurrences.at(i) / (double)inputCount);
-            importSum += fitVector[i] / occurrences.size(); // * (occurrences.at(i) / (double)inputCount); //importance[i];
+// 10/19/2011 version:            importSum += fitVector[i] / occurrences.size();
+            importSum += fitVector[i] * ((occurrences.at(i) / occurrencesTotal) * (1.0 - recency.at(i) / recencyTotal));
         }
-//        delete importance;
     } else importSum = 0;
     delete fitVector;   // this is assigned just for us, we're responsible for cleaning it up.
-//    importSum = importSum;    // try magnitude of import vector
-    //        cout << importSum << " residual: " << myArt->GetResidual() << endl;
-    
-//    const double* w = myArt->GetWeights(0);
-//    OSCSend::getSingleton()->oscSend("/0", 26*2, w);
-//    delete w;
+    fitVector = 0x00;
     
     return pow(importSum, IMPORTANCE_FACTOR) * myArt->GetResidual();  // this is the intrinsic reward for observing this input!
 }
@@ -155,17 +159,27 @@ double ReinforcementLearner::CalcPredictedReward(int test)
 //    if (fitVector != 0x00)
 //        delete fitVector;
     fitVector = myArt->GetCategoryChoice();                         // get the resonance of each category
+    int fitVectorSize = myArt->GetCategoryCount();
     
     //int cat = 
     myArt->PredictChoice();
     
-    double importSum = 0.0;     // now calculate the importance vector, i.e. how boring something is.
-    for (int j = 0; j < occurrences.size(); j++)
+    while (occurrences.size() < fitVectorSize)
+        occurrences.push_back(0.0);
+    while (recency.size() < fitVectorSize)
+        recency.push_back(0.0);
+    
+    double importSum = 0.0;
+    if (occurrences.size() > 0 && recency.size() > 0 && fitVectorSize > 0 && recencyTotal > 0 && occurrencesTotal > 0)
     {
-//        mImportance[j] = fitVector[j] / occurrences.size(); // * (occurrences.at(j) / (double)inputCount);
-        importSum += fitVector[j] / occurrences.size(); //mImportance[j];
-    }
-    importSum = importSum;    // try magnitude of import vector
+        for (int i = 0; i < fitVectorSize; i++)
+        {
+            // 10/19/2011 version:            importSum += fitVector[i] / occurrences.size();
+            importSum += fitVector[i] * ((occurrences.at(i) / occurrencesTotal) * (1.0 - recency.at(i) / recencyTotal));
+        }
+    } else importSum = 0;
+    
+//    importSum = importSum;    // try magnitude of import vector??
     delete fitVector;   // it gets assigned just for us, so clear it out
     fitVector = 0x00;
     

@@ -68,6 +68,11 @@ const double* ART::GetCategoryChoice()
     } else return 0x00;
 }
 
+int ART::GetCategoryCount() // how many categories?
+{
+    return mCategories.size();
+}
+
 void ART::normalizeInput()
 {			
     // limit input to [0,1] - normalize the input vector

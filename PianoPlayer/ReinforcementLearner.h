@@ -39,8 +39,9 @@ private:
     ART *myArt;
     ART *upperArt;  // a 2nd ART to watch the transitions between myArt's categories
     double * featureVector;
-    int inputCount; // how many inputs we have fed into the ART
-    vector<int> occurrences;    // how many time each category has been observed
+    double occurrencesTotal, recencyTotal; // how much total resonance we have observed from the ART, size of recency vector
+    vector<double> occurrences;    // how much resonance has been observed for each category
+    vector<double> recency;         // a decaying sum of observed resonance for each category
 //    int mDimensions;
 //    double mChoice, mLearnRate, mVigilance;	// store for reset
     // outputs from processing in the ART
