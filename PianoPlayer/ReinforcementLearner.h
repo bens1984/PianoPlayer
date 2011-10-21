@@ -51,6 +51,7 @@ private:
     double distance;
     int prevObs;    // previous pitch input
     double mySponteneity;
+    bool    useRecency;     // do we weight resonance by a measure of recency?
     
 public:
     ReinforcementLearner();
@@ -81,5 +82,9 @@ public:
     void SetSponteneity(double s)
     {
         mySponteneity = s / 19.0;   // divide by the number of feature vector dimensions
+    }
+    void SetUseRecency(bool b)
+    {
+        useRecency = b;
     }
 };

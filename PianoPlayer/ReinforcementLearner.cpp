@@ -12,7 +12,7 @@
 
 #include "ReinforcementLearner.h"
 
-ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/28.0), recencyTotal(0.0) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
+ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/28.0), recencyTotal(0.0), useRecency(true) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
     myArt = new ART(0, 0.8, 0.9);    // params: choice, learning rate, vigilance
     myArt->AddResonanceGroup(0, 12, 0.5);   // tell it about the pitch group
@@ -99,8 +99,11 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
         for (int i = 0; i < occurrences.size(); i++)
         {
 //            importance[i] = fitVector[i]; // * (occurrences.at(i) / (double)inputCount);
-// 10/19/2011 version:            importSum += fitVector[i] / occurrences.size();
-            importSum += fitVector[i] * ((occurrences.at(i) / occurrencesTotal) * (1.0 - recency.at(i) / recencyTotal));
+// 10/19/2011 version:            
+            if (!useRecency)
+                importSum += fitVector[i] / occurrences.size();
+            else
+                importSum += fitVector[i] * ((occurrences.at(i) / occurrencesTotal) * (1.0 - recency.at(i) / recencyTotal));
         }
     } else importSum = 0;
     delete fitVector;   // this is assigned just for us, we're responsible for cleaning it up.
@@ -118,6 +121,7 @@ int ReinforcementLearner::PredictMaximalInput()      // look one step ahead and 
         //            rewardLR[i] = (1.0-importSum) * myArt->GetResidualLR();
     }
     OSCSend::getSingleton()->oscSend("/predictReward", 48, &reward[0]);
+    OSCSend::getSingleton()->oscSend("/recency", recency.size(), &recency[0]);
     double max = -1;
     int maxInput = -1;
     for (int i = 0; i < 48; i++)
@@ -174,8 +178,11 @@ double ReinforcementLearner::CalcPredictedReward(int test)
     {
         for (int i = 0; i < fitVectorSize; i++)
         {
-            // 10/19/2011 version:            importSum += fitVector[i] / occurrences.size();
-            importSum += fitVector[i] * ((occurrences.at(i) / occurrencesTotal) * (1.0 - recency.at(i) / recencyTotal));
+            // 10/19/2011 version:            
+            if (!useRecency)
+                importSum += fitVector[i] / occurrences.size();
+            else
+                importSum += fitVector[i] * ((occurrences.at(i) / occurrencesTotal) * (1.0 - recency.at(i) / recencyTotal));
         }
     } else importSum = 0;
     
