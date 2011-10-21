@@ -34,18 +34,27 @@ int OSCSend::oscSend(const char* message, int size, float* data)
 }
 void OSCSend::oscSend(const char* header, int size, const double* data)
 {
-	int i;
-	char buffer[OUTPUT_BUFFER_SIZE];
-	osc::OutboundPacketStream p( buffer, OUTPUT_BUFFER_SIZE );
-	
-	p << osc::BeginBundleImmediate << osc::BeginMessage( header );
-	for (i=0; i< size; i++)	{
-		p << (float)data[i];
-	}
-	
-	p << osc::EndMessage << osc::EndBundle;
-	
-	transmitSocket->Send( p.Data(), p.Size() );
+    if (size > 0)
+    {
+        unsigned int bufSize = OUTPUT_BUFFER_SIZE; //sizeof(header) + size*sizeof(float) + 128;   // it needs more than 64 bytes of padding for OSC stuff... not sure the exact number
+//        bufSize = (bufSize < OUTPUT_BUFFER_SIZE ? bufSize : OUTPUT_BUFFER_SIZE);
+        char buffer[bufSize];
+        if (size > 980)
+            size = 980;
+//        for (int j = 0; j < size; j += bufSize/sizeof(float))  // this should split really large packets, but won't mark the header!
+//        {
+            osc::OutboundPacketStream p( buffer, bufSize );
+            
+            p << osc::BeginBundleImmediate << osc::BeginMessage( header );
+            for (int i=0; i < size; i++)	{
+                p << (float)data[i];
+            }
+            
+            p << osc::EndMessage << osc::EndBundle;
+            
+            transmitSocket->Send( p.Data(), p.Size() );
+        }
+//    }
 }
 void OSCSend::oscSend(const char* header, int size, const int* data)
 {

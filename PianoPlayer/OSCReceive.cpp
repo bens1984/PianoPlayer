@@ -29,8 +29,8 @@ void ExamplePacketListener::ProcessMessage( const osc::ReceivedMessage& m, const
         // example of parsing single messages. osc::OsckPacketListener
         // handles the bundle traversal.
         
-		OSCData *d = 0x00; //new OSCData;
-//		d.header = oscNothing;
+		OSCData *d = new OSCData; //new OSCData;
+		d->header = oscNothing;
 
 		osc::ReceivedMessage::const_iterator arg = m.ArgumentsBegin();
 		if( strcmp( m.AddressPattern(), "/obs") == 0 )	// this is a packet of feature data: /obs len x x x x
@@ -50,7 +50,7 @@ void ExamplePacketListener::ProcessMessage( const osc::ReceivedMessage& m, const
             d = new OSCData;
 			d->header = oscReset;
         } 
-		if (d != 0x00) //d.header != oscNothing)
+		if (d->header != oscNothing)
 		{
 			pthread_mutex_lock(MusiVerse::oscmutex);	//wait for the lock
 			MusiVerse::rxCommands.push_back(d);

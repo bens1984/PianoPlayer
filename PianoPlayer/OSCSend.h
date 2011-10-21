@@ -4,7 +4,7 @@
 #include "osc/OscOutboundPacketStream.h"
 #include "ip/UdpSocket.h"
 
-#define OUTPUT_BUFFER_SIZE 1024
+#define OUTPUT_BUFFER_SIZE 4096
 #define OSC_DESTINATION "127.0.0.1"
 #define OSC_PORT 7130
 

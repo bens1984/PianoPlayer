@@ -60,4 +60,9 @@ Dev Notes:\
 	I want it to be able to identify which features are significant and how they are being used. For example: folk music will treat many of the features as fixed (basically) or random, and others are used in specific ways (rhythm is regular but pushed/pulled, pitch is used melodically). How can this be deduced from a series of observations? \
 	Perhaps category widths along each dimension, how resonant categories relate together (which dimensions they relate along), between extreme points in the feature space which dimensions are being explored\'85 and how this is happening together (i.e. pitch varies greatly but rhythm remains constant, or timbre is noisy/random while register is very limited).\
 \
-	Trying to incorporate overall category value (i.e. how many times it shows up or how much it has resonated over the course of the piece) and how fresh or over-played an idea is (a decaying sum of resonance). CategoryValue * (1-overPlayed)?}
+	Trying to incorporate overall category value (i.e. how many times it shows up or how much it has resonated over the course of the piece) and how fresh or over-played an idea is (a decaying sum of resonance). CategoryValue * (1-overPlayed)? overPlayed is going to be very small values (if normalized) or increasingly large values.\
+\
+10/21/2011\
+	\
+	Letting it run for many minutes (10+) produces an interesting observation: it gets slower and slower, as more categories are added and the comparisons get more lengthy. Twice now it suddenly accelerates again, very noticeably. Is this because it has moved to much more "obvious" categorizations and doesn't have to search as deeply? Is there another explanation?\
+	It is very bizarre when it happens! It goes from ~130ms per prediction to 70ms or so and then fairly quickly slows down again (over 50 steps?) It could be something that happens coincidentally with the computer (i.e. CPU is freed) but unlikely, this computer has 8 powerful cores (and I'm maxing 1 fully).}
