@@ -34,7 +34,7 @@ ART::~ART()
         delete choices;
     choiceSize = 0;
 }
-void ART::ProcessNewObservation(double *&in, int length)
+void ART::ProcessNewObservation(const double *in, int length)
 {
     setInput(in, length);
     normalizeInput();
@@ -90,7 +90,7 @@ inline void ART::complementCode()
     for (int i = 0; i < mDimensions*2; i+=2)	// create complement of input - complement coding
         input[i+1] = 1.0 - input[i];
 }
-void ART::setInput(double *&_in, int size)
+void ART::setInput(const double *_in, int size)
 {
     if (size > 0 && size > mDimensions)
     {
@@ -133,8 +133,10 @@ void ART::FillCategoryChoice()
     // check against all existing categories, and 1 empty one
     if (mDimensions > 0)
     {
+        if (mResonanceWeights.size() == 0)
+            mResonanceWeights.push_back(ResonanceGroup(0, mDimensions, mDimensions));
         for (int i = 0; i < mCategories.size(); i++)
-            choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice); //, mResonanceWeights);  // pass in a descriptor for the feature vector
+            choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice, mResonanceWeights);  // pass in a descriptor for the feature vector
     }
 }
 int ART::makeChoice()
@@ -204,7 +206,7 @@ int ART::PredictChoice(double workingVigilance)
             if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
             {
                 if (maxIndex == mCategories.size()-1)   // it would be a new category
-                    residual = mDimensions;   // new categories are too chaotic for us to privilege
+                    residual = 1; //mDimensions;   // new categories are too chaotic for us to privilege
                 else
                     residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,1.0); //mLearnRate); // <- figure out how much residual would occur
                 chosen = true;

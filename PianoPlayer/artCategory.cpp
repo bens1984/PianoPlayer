@@ -40,7 +40,7 @@ double ArtCategory::Choose(const double* input, int size, double mChoice, vector
     {
         double tempMin = 0;
         double tempSum = 0;
-        for (int j = resonanceWeights.at(i).startIndex; j < resonanceWeights.at(i).startIndex+resonanceWeights.at(i).length; j++)
+        for (int j = resonanceWeights.at(i).startIndex*2; j < resonanceWeights.at(i).startIndex*2+resonanceWeights.at(i).length*2; j++)
         {
             tempMin += (input[j] < weighting[j] ? input[j] : weighting[j]);
             tempSum += weighting[j];
@@ -110,10 +110,10 @@ double ArtCategory::GetResidual(const double* input, int size, double mLearnRate
 {
     double residual = 0;
     
-    if (!committed)
-    {
+//    if (!committed)
+//    {
         mLearnRate = 1;
-    }
+//    }
     double inverseLearnRate = 1.0 - mLearnRate;
     for (int i = 0; i < size; i++)
     {

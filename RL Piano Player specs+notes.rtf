@@ -65,4 +65,11 @@ Dev Notes:\
 10/21/2011\
 	\
 	Letting it run for many minutes (10+) produces an interesting observation: it gets slower and slower, as more categories are added and the comparisons get more lengthy. Twice now it suddenly accelerates again, very noticeably. Is this because it has moved to much more "obvious" categorizations and doesn't have to search as deeply? Is there another explanation?\
-	It is very bizarre when it happens! It goes from ~130ms per prediction to 70ms or so and then fairly quickly slows down again (over 50 steps?) It could be something that happens coincidentally with the computer (i.e. CPU is freed) but unlikely, this computer has 8 powerful cores (and I'm maxing 1 fully).}
+	It is very bizarre when it happens! It goes from ~130ms per prediction to 70ms or so and then fairly quickly slows down again (over 50 steps?) It could be something that happens coincidentally with the computer (i.e. CPU is freed) but unlikely, this computer has 8 powerful cores (and I'm maxing 1 fully).\
+\
+10/24/2011\
+\
+	These settings work pretty nicely:\
+		art1 - 0.1 LR, 0.95 vig, 0.8 decays, 0.4 decay on "others"\
+		upperArt - 0.05 LR, 0.6 Vig\
+		0.5 Import Factor, 0.975 recency decay, useRecency=false}

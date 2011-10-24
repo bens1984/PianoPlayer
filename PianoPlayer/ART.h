@@ -29,7 +29,7 @@ private:
     // private member functions
     void normalizeInput();
     inline void complementCode();
-    void setInput(double *&_in, int size);
+    void setInput(const double *_in, int size);
     
     //	set the mVigilance just high enough to reset the chosen category and look again.
     int increaseVigilance();
@@ -37,7 +37,7 @@ private:
 public:
     ART(double _choice, double _learnRate, double _Vigilance);
     ~ART();
-    void ProcessNewObservation(double *&input, int length);
+    void ProcessNewObservation(const double *input, int length);
     
     void setVigilance(double v);
     void setLearnRate(double v);
