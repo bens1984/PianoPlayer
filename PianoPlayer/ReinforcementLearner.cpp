@@ -6,7 +6,7 @@
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
-#define IMPORTANCE_FACTOR 4.0       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
+#define IMPORTANCE_FACTOR 0.5       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
 
 #define RECENCY_DECAY_RATE  0.975     // how quickly the recency vector decays. This is how quickly ideas become familiar and no longer fresh
 
@@ -14,7 +14,7 @@
 
 ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/28.0), recencyTotal(0.0), useRecency(true) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    myArt = new ART(0, 0.2, 0.925);    // params: choice, learning rate, vigilance
+    myArt = new ART(0, 0.2, 0.95);    // params: choice, learning rate, vigilance
     myArt->AddResonanceGroup(0, 12, 0.5);   // tell it about the pitch group
     myArt->AddResonanceGroup(12, 7, 0.5);   // tell it about the interval group
     myArt->AddResonanceGroup(19, 8, 1.0);   // tell it about the "others" group
@@ -90,7 +90,9 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
         occurrencesTotal += fitVector[i];
         recency.at(i) += fitVector[i];
         recency.at(i) *= RECENCY_DECAY_RATE;
-        recencyTotal += recency.at(i);      // could also consider recencyMax here, to get a vector with max dimension of 1 rather than Unity vector...
+        if (recency.at(i) > recencyTotal)
+            recencyTotal = recency.at(i);
+//        recencyTotal += recency.at(i);      // could also consider recencyMax here, to get a vector with max dimension of 1 rather than Unity vector...
     }
     
     double importSum = 0.0;

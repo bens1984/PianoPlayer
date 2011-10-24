@@ -65,4 +65,6 @@ Dev Notes:\
 10/21/2011\
 	\
 	Letting it run for many minutes (10+) produces an interesting observation: it gets slower and slower, as more categories are added and the comparisons get more lengthy. Twice now it suddenly accelerates again, very noticeably. Is this because it has moved to much more "obvious" categorizations and doesn't have to search as deeply? Is there another explanation?\
-	It is very bizarre when it happens! It goes from ~130ms per prediction to 70ms or so and then fairly quickly slows down again (over 50 steps?) It could be something that happens coincidentally with the computer (i.e. CPU is freed) but unlikely, this computer has 8 powerful cores (and I'm maxing 1 fully).}
+	It is very bizarre when it happens! It goes from ~130ms per prediction to 70ms or so and then fairly quickly slows down again (over 50 steps?) It could be something that happens coincidentally with the computer (i.e. CPU is freed) but unlikely, this computer has 8 powerful cores (and I'm maxing 1 fully).\
+\
+	A very nice effect is achieved by feeding it a diatonic pattern and setting: IMPORTANCE_FACTOR=0.25, RECENCY_DECAY_RATE=0.975, Learn=0.05, Vig=0.95, STM decays at 0.8+, othersSTM decay=0.2}
