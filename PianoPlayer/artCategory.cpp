@@ -103,7 +103,7 @@ double ArtCategory::Learn(const double* input, int size, double mLearnRate)
             sum += weighting[i];
         delete newWeighting;
         
-        return residual / (size * 0.5);
+        return residual / (size); // * 0.5);
     } else return -1;
 }
 double ArtCategory::GetResidual(const double* input, int size, double mLearnRate)  // return the amount of change in the category if this input was learned with LearnRate=1
@@ -121,7 +121,7 @@ double ArtCategory::GetResidual(const double* input, int size, double mLearnRate
         residual += weighting[i] - (mLearnRate * min + inverseLearnRate * weighting[i]);
     }
     
-    return residual / (size * 0.5);
+    return residual / (size); // * 0.5);
 }
 
 const double* ArtCategory::GetWeights()

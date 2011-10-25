@@ -24,8 +24,9 @@ private:
     double*     myEncoder;
     double      decayAmount;
     DecayModel  myDecay;
+    bool        dynamicGrow;    // allow the size of the STM to grow if new tokens are input?
 public:
-    SpatialEncoder(int tokenCount);
+    SpatialEncoder(int tokenCount, bool dynamic = false);
     ~SpatialEncoder();
     
     void DoEncoding(int token);

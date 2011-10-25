@@ -1,0 +1,38 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf360
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww9000\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f0\fs24 \cf0 Piano Player mk 3\
+\
+Recoded the importance weighting, and ignored the "recency" idea. This later seems to be covered by the measure of residual when several ARTs are nested together. This version uses 2 levels of ARTs watching the same feature vector (one with a high vigilance, one with a wide/low vigilance). Thus inputs try to satisfy both at once, causing more cohesive explorations of the musical space.\
+\
+Try the "give it C and go" test (open all the gates and put in 60).\
+\
+----\
+\
+Piano Player mk 2\
+\
+Revisions in this agent:\
+	recency\
+	import weighting\
+	tradeoff between resonance & residual\
+	tweaks to coefficients/parameters, now better understood\
+\
+Demo: in max use one of the diatonic sets and input it 5 or 6 times. Then set all the g-gates to let data through and give it the next note it wants (or any of the diatonic notes) and let it go!\
+\
+Setting the decay rate longer (0.9) vs shorter (0.2): shorter causes fewer, more distinctive categories. This seems to work well for the "others" STM. Setting it higher causes more sequential relationships between the categories (i.e. A leads to B to C almost every time) and requires more categories to be created to reflect subtle sequential differences. The shorter version for pitch & interval causes short motivic fragments and alternating pairs of notes (i.e. really slow trills). Longer causes more lines and patterns (around 6 at 0.8).\
+\
+\
+PianoPlayer mk 1\
+\
+This reinforcement learning agent observes inputs, categorizes these inputs, and predicts maximally rewarding subsequent inputs. This version looks at pitch class and interval class\
+\
+Run the max patch and xCode project. In the max patch: click one of the message boxes or the big bang towards the bottom-left. Then swith the g-gate to on (if it's off) and enter a number in the lower-most left box (typically the number shown in the right-middle most number box: the next most valuable input). Then watch it go!\
+\
+(the malloc errors in the Xcode project are ignorable\'96it's freeing a resource that was not assigned.)\
+\
+This version predicts future inputs by multiplying the summed resonance for each prediction with the resultant learning residual. The result is a very steady and uniform exploration of the feature space, which is fairly uninteresting after 30 seconds or so. \
+\
+The next step is to give it some way to vary its rate of progress, incorporating ideas of freshness vs. overplayed and a meta boredom factor that prompts for more spontaneous leaps.}

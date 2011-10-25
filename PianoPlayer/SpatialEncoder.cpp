@@ -10,7 +10,7 @@
 #include "SpatialEncoder.h"
 #include <string.h>
 
-SpatialEncoder::SpatialEncoder(int tokenCount) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.7)
+SpatialEncoder::SpatialEncoder(int tokenCount, bool dynamic) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.7), dynamicGrow(dynamic)
 {
     if (dimensions == 0)
         dimensions = 2;
@@ -43,10 +43,23 @@ void SpatialEncoder::DoEncoding(int* tokens, int size)
 void SpatialEncoder::AddToken(int token)
 {
     if (dimensions > 0 && token >= 0) { // && token < dimensions) {
+        if (token > dimensions)
+            if (dynamicGrow)
+            {
+                double* newEncoder = (double*)malloc(token*sizeof(double));
+                memcpy(newEncoder, myEncoder, dimensions*sizeof(double));
+                dimensions = token;
+                delete myEncoder;
+                myEncoder = newEncoder;
+            } else
+            {
+                cout << "Warning: SpatialEncoder::AddToken: '" << token << "' token out of range: " << dimensions << endl;
+                return; // it's an error!
+            }
         token = token % dimensions;
         myEncoder[token] = 1.0;
     } else
-        cout << "Warning: SpatialEncoder::AddToken: '" << token << "' token out of range. " << dimensions << endl;
+        cout << "Warning: SpatialEncoder::AddToken: '" << token << "' token out of range: " << dimensions << endl;
 }
 
 void SpatialEncoder::AddToken(int* token, int size)    // input several tokens at once

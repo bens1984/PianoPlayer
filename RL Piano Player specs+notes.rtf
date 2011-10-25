@@ -68,4 +68,14 @@ Dev Notes:\
 	It is very bizarre when it happens! It goes from ~130ms per prediction to 70ms or so and then fairly quickly slows down again (over 50 steps?) It could be something that happens coincidentally with the computer (i.e. CPU is freed) but unlikely, this computer has 8 powerful cores (and I'm maxing 1 fully).\
 \
 10/24/2011\
-	A very nice effect is achieved by feeding it a diatonic pattern and setting: IMPORTANCE_FACTOR=0.25, RECENCY_DECAY_RATE=0.975, Learn=0.05, Vig=0.95, STM decays at 0.8+, othersSTM decay=0.2}
+\
+	These settings work pretty nicely:\
+		art1 - 0.1 LR, 0.95 vig, 0.8 decays, 0.4 decay on "others"\
+		upperArt - 0.05 LR, 0.6 Vig\
+		0.5 Import Factor, 0.975 recency decay, useRecency=false\
+\
+10/25/2011\
+\
+	In 2nd tier ART try using just the category ID in a standard STM, and also try using the fit vector as stimulus for an STM (so the resonance excites if it's > than the current level, otherwise it just decays). Which gives a better sense of the progression without losing too much information (the cat ID might be too lossy)?\
+	Perhaps add an ART that encodes the transitions between first level STM steps? (absolute value of each element - previous time step of same element) This might make some very interesting patterns as the RL tries to maximize this.\
+	The 2nd tier ART (thirdART) should have a dynamic vigilance setting. As more dimensions are added to the feature vector it will become more particular, but it means that at first it is very accepting. I'm assuming this is not good, but maybe it's a feature?}

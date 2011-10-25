@@ -278,9 +278,9 @@ double ART::GetImportanceSum()
 #ifdef USING_RECENCY
             importance += choices[i] * (mObservations.at(i) / (double)inputCount) * (1.0 - (mRecency.at(i) / recencyMax));
 #else
-            importance += choices[i] * (mObservations.at(i) / (double)inputCount);
+            importance += choices[i]; // * (mObservations.at(i) / (double)inputCount);
 #endif
         }
     }
-    return importance;
+    return importance / mCategories.size();
 }
