@@ -8,11 +8,12 @@
 
 #include "ART.h"
 
-ART::ART(double _choice, double _learnRate, double _Vigilance) : mDimensions(19), residual(0), choices(0x00)
+ART::ART(double _choice, double _learnRate, double _Vigilance) : mDimensions(19), residual(0), choices(0x00), inputCount(0), maxRecency(0)
 {
     mCategories.clear();
     mCategories.push_back(new ArtCategory(mDimensions));
-    //        mCount.push_back(0);
+    mObservations.push_back(0);
+    mRecency.push_back(0);
     
     input = new double[mDimensions*2];
     choices = new double[1];    // size of category vector
@@ -34,9 +35,12 @@ ART::~ART()
         delete choices;
     choiceSize = 0;
 }
-void ART::ProcessNewObservation(double *&in, int length)
+void ART::ProcessNewObservation(const double *in, int length)
 {
     setInput(in, length);
+#ifdef USING_RECENCY
+    DecayRecency();
+#endif
     normalizeInput();
     complementCode();
     FillCategoryChoice();
@@ -90,7 +94,7 @@ inline void ART::complementCode()
     for (int i = 0; i < mDimensions*2; i+=2)	// create complement of input - complement coding
         input[i+1] = 1.0 - input[i];
 }
-void ART::setInput(double *&_in, int size)
+void ART::setInput(const double *_in, int size)
 {
     if (size > 0 && size > mDimensions)
     {
@@ -133,9 +137,16 @@ void ART::FillCategoryChoice()
     // check against all existing categories, and 1 empty one
     if (mDimensions > 0)
     {
+        if (mResonanceWeights.size() == 0)
+            mResonanceWeights.push_back(ResonanceGroup(0, mDimensions, mDimensions));
         for (int i = 0; i < mCategories.size(); i++)
-            choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice); //, mResonanceWeights);  // pass in a descriptor for the feature vector
+            choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice, mResonanceWeights);  // pass in a descriptor for the feature vector
     }
+}
+void ART::DecayRecency()
+{
+    for (int i = 0; i < mRecency.size(); i++)
+        mRecency.at(i) *= RECENCY_DECAY_RATE;
 }
 int ART::makeChoice()
 {
@@ -159,10 +170,14 @@ int ART::makeChoice(double workingVigilance)
         {          // if above vigilence then learn from it
             if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// learn!
             {
-                OSCSend::getSingleton()->oscSend("/in", mDimensions*2, input);
+//                OSCSend::getSingleton()->oscSend("/in", mDimensions*2, input);
                 residual = mCategories.at(maxIndex)->Learn(input,mDimensions*2,mLearnRate); //learn
                 while (maxIndex >= mCategories.size()-1)	// committed the previous uncommitted category, so add a new blank one.
+                {
                     mCategories.push_back(new ArtCategory(mDimensions));
+                    mObservations.push_back(0);
+                    mRecency.push_back(0);
+                }
                 chosen = true;
                 recentChoice = maxIndex;
             }
@@ -174,11 +189,14 @@ int ART::makeChoice(double workingVigilance)
         } else
             chosen = true;
     }	// otherwise look again.
-    //        if (maxIndex > -1)
-    //        {
-    //            inputCount++;
-    //            mCount.at(maxIndex) += 1;
-    //        }
+    if (maxIndex > -1)
+    {
+        inputCount++;
+        mObservations.at(maxIndex) += 1;
+#ifdef USING_RECENCY
+        mRecency.at(maxIndex) += 0.1;
+#endif
+    }
     return maxIndex;
 }
 int ART::PredictChoice()
@@ -204,7 +222,7 @@ int ART::PredictChoice(double workingVigilance)
             if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
             {
                 if (maxIndex == mCategories.size()-1)   // it would be a new category
-                    residual = mDimensions;   // new categories are too chaotic for us to privilege
+                    residual = 1; //mDimensions;   // new categories are too chaotic for us to privilege
                 else
                     residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,1.0); //mLearnRate); // <- figure out how much residual would occur
                 chosen = true;
@@ -218,11 +236,6 @@ int ART::PredictChoice(double workingVigilance)
         } else
             chosen = true;
     }	// otherwise look again.
-    //        if (maxIndex > -1)
-    //        {
-    //            inputCount++;
-    //            mCount.at(maxIndex) += 1;
-    //        }
     return maxIndex;
 }
 double ART::calcDistance(int cat)	// use set input and calculate distance to center of specified category
@@ -247,4 +260,27 @@ const double* ART::GetWeights(int index)
         memcpy(weights, mCategories.at(index)->GetWeights(), mDimensions*2*sizeof(double));
         return weights;
     } else return 0x00;
+}
+
+double ART::GetImportanceSum()
+{
+    double importance = 0.0;
+    if (inputCount > 0) {   
+#ifdef USING_RECENCY
+        double recencyMax = 1.0;
+        for (int i = 0; i < mRecency.size(); i++)
+        {
+            recencyMax = (mRecency.at(i) > recencyMax ? mRecency.at(i) : recencyMax);
+        }
+#endif
+        for (int i = 0; i < mCategories.size(); i++)
+        {
+#ifdef USING_RECENCY
+            importance += choices[i] * (mObservations.at(i) / (double)inputCount) * (1.0 - (mRecency.at(i) / recencyMax));
+#else
+            importance += choices[i] * (mObservations.at(i) / (double)inputCount);
+#endif
+        }
+    }
+    return importance;
 }

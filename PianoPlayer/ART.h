@@ -11,6 +11,10 @@
 #include <vector.h>
 #include "OSCSend.h"
 
+#define RECENCY_DECAY_RATE  0.99     // how quickly the recency vector decays. This is how quickly ideas become familiar and no longer fresh
+
+//#define USING_RECENCY       // comment out to block using the recency vector during importance calculations
+
 using namespace std;
 
 class ART
@@ -19,8 +23,10 @@ private:
     int mDimensions; // how many dimensions to match data on
     vector<ArtCategory*> mCategories;
     vector<ResonanceGroup> mResonanceWeights;
-//    vector<int> mCount;     // how many times each category has been seen. trying to measure how "confident" we are in the observation
-//    int inputCount;  // how many inputs we have seen
+    vector<int> mObservations;     // how many times each category has been seen. trying to measure how "confident" we are in the observation
+    int inputCount;  // how many inputs we have seen
+    vector<double> mRecency;
+    double maxRecency;
     double mChoice, mLearnRate, mVigilance;
     double *input, *choices;
     int recentChoice, choiceSize;	// the most recently chosen category, the size of the choices array
@@ -29,15 +35,16 @@ private:
     // private member functions
     void normalizeInput();
     inline void complementCode();
-    void setInput(double *&_in, int size);
+    void setInput(const double *_in, int size);
     
     //	set the mVigilance just high enough to reset the chosen category and look again.
     int increaseVigilance();
     void FillCategoryChoice();
+    void DecayRecency();
 public:
     ART(double _choice, double _learnRate, double _Vigilance);
     ~ART();
-    void ProcessNewObservation(double *&input, int length);
+    void ProcessNewObservation(const double *input, int length);
     
     void setVigilance(double v);
     void setLearnRate(double v);
@@ -55,4 +62,6 @@ public:
     double calcDistance(int cat);	// use set input and calculate distance to center of specified category
     const double *getWeights();	// return all of the weights of all of our categories
     const double* GetWeights(int index);
+    
+    double GetImportanceSum();
 };

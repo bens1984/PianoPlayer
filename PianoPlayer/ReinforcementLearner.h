@@ -27,7 +27,7 @@
 
 #include "OSCSend.h"
 
-#define NEW_THRESHOLD 0.1          // how mush residual a new category creation is "worth". When the predictor can't find
+#define NEW_THRESHOLD 0.001          // how mush residual a new category creation is "worth". When the predictor can't find
                                     // a known category with this much residual it will then consider creating new categories
 
 
@@ -38,6 +38,7 @@ private:
     SpatialEncoder *tempEncoder, *tempIntEncoder, *tempOtherEncoder;
     ART *myArt;
     ART *upperArt;  // a 2nd ART to watch the transitions between myArt's categories
+    ART *thirdArt;  // watches resonances of lower ARTs
     double * featureVector;
     double occurrencesTotal, recencyTotal; // how much total resonance we have observed from the ART, size of recency vector
     vector<double> occurrences;    // how much resonance has been observed for each category
