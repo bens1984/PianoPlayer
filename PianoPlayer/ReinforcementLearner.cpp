@@ -7,16 +7,16 @@
 //
 //#define UPPERART  // define to use a wide vigilance ART at the first level in addition to the fine/narrow/high vigilance ART
 
-#define IMPORTANCE_FACTOR 0.1       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
+#define IMPORTANCE_FACTOR 1.0       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
 
 #include "ReinforcementLearner.h"
 
 ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/30.0), recencyTotal(0.0), useRecency(false) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    myArt = new ART(0, 0.1, 0.925);    // params: choice, learning rate, vigilance
+    myArt = new ART(0, 0.5, 0.925);    // params: choice, learning rate, vigilance
     myArt->AddResonanceGroup(0, 12, 12.0);   // tell it about the pitch group
-    myArt->AddResonanceGroup(12, 7, 4.0);   // tell it about the interval group
-    myArt->AddResonanceGroup(19, 6, 10.0);   // tell it about the "others" group - direction & octave leap
+    myArt->AddResonanceGroup(12, 7, 7.0);   // tell it about the interval group
+    myArt->AddResonanceGroup(19, 6, 8.0);   // tell it about the "others" group - direction & octave leap
     myArt->AddResonanceGroup(25, 5, 3.0);   // tell it about the "others" group - octave number (pitch / 12)
     
     myEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
@@ -31,10 +31,10 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
     
     thirdSTM = new SpatialEncoder(32, true);
     tempThirdSTM = new SpatialEncoder(32, true);
-    thirdSTM->SetDecayAmount(0.9);
+    thirdSTM->SetDecayAmount(0.7);
     
     upperArt = new ART(0, 0.2, 0.6);
-    thirdArt = new ART(0, 0.01, 0.6);
+    thirdArt = new ART(0, 0.5, 0.85);
     
     featureVector = (double*)malloc(sizeof(double)*30); //new double(27);
     std::cout << "ReinforcementLearner -- ©2011 Benjamin Smith\n";
@@ -225,17 +225,18 @@ double ReinforcementLearner::CalcPredictedReward(int test)
     tempThirdSTM->DoEncoding(cat);
     thirdArt->ProcessNewObservation(tempThirdSTM->GetEncoding(), tempThirdSTM->GetDimensions());
     //    thirdArt->ProcessNewObservation(fitVector, fitVectorSize);
+    double thirdImportSum = thirdArt->GetImportanceSum();   // must be called before make/predictChoice as those function destroy the choice vector
     thirdArt->PredictChoice();
 //    importSum += thirdArt->GetImportanceSum();
     
     delete fitVector;   // it gets assigned just for us, so clear it out
     fitVector = 0x00;
     
-    double res = myArt->GetResidual() 
-#ifdef UPPERART 
-    * upperArt->GetResidual()
-#endif
-    * thirdArt->GetResidual();
+//    double res = myArt->GetResidual() 
+//#ifdef UPPERART 
+//    * upperArt->GetResidual()
+//#endif
+//    * thirdArt->GetResidual();
 //    if (res > 0.05)
 //        cout << myArt->GetResidual() << "::" << thirdArt->GetResidual() << endl;
 ////    res = (res > 0.05 ? 0.05 : res);
@@ -244,9 +245,11 @@ double ReinforcementLearner::CalcPredictedReward(int test)
 //    if (myArt->GetResidual() == 1 || upperArt->GetResidual() == 1)      // it's creating a new category, so treat it seperately
 //        return importSum * mySponteneity; // + thirdArt->GetImportanceSum() * mySponteneity * 10.0; // * (1.0 / recencyTotal);
 //    else
-        if (!useRecency)
-            return sin(pow(myArt->GetResidual(), 0.5) * 3.0) * pow(importSum, IMPORTANCE_FACTOR) + 
-            sin(pow(thirdArt->GetResidual(), 0.5) * 3.0); // * pow(thirdArt->GetImportanceSum(), IMPORTANCE_FACTOR); //1.0 - fabs(0.07 - res); // * importSum;               // here we want a lot of change * something boring, or minimal change * something new
-        else
-            return res * pow(importSum, IMPORTANCE_FACTOR) * (1.0 - recency.at(cat) / recencyTotal);    // here we want a lot of change * something boring, or minimal change * something new
+//        if (!useRecency)
+//    if (test == 0)
+//        cout << thirdArt->GetResidual() << "--" << thirdImportSum << "++" << sin(pow(thirdArt->GetResidual(), 0.125) * 3.1) << endl;
+            return sin(pow(myArt->GetResidual(), 0.5) * 3.1) * pow(importSum, IMPORTANCE_FACTOR) + 
+    sin(pow(thirdArt->GetResidual(), 0.5) * 3.1) * 4.0 * thirdImportSum; //1.0 - fabs(0.07 - res); // * importSum;               // here we want a lot of change * something boring, or minimal change * something new
+//        else
+//            return res * pow(importSum, IMPORTANCE_FACTOR) * (1.0 - recency.at(cat) / recencyTotal);    // here we want a lot of change * something boring, or minimal change * something new
 }
