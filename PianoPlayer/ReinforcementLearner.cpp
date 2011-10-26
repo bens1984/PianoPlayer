@@ -7,34 +7,34 @@
 //
 //#define UPPERART  // define to use a wide vigilance ART at the first level in addition to the fine/narrow/high vigilance ART
 
-#define IMPORTANCE_FACTOR 8.0       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
+#define IMPORTANCE_FACTOR 0.1       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
 
 #include "ReinforcementLearner.h"
 
 ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/30.0), recencyTotal(0.0), useRecency(false) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    myArt = new ART(0, 0.1, 0.9125);    // params: choice, learning rate, vigilance
+    myArt = new ART(0, 0.1, 0.925);    // params: choice, learning rate, vigilance
     myArt->AddResonanceGroup(0, 12, 12.0);   // tell it about the pitch group
-    myArt->AddResonanceGroup(12, 7, 3.5);   // tell it about the interval group
+    myArt->AddResonanceGroup(12, 7, 4.0);   // tell it about the interval group
     myArt->AddResonanceGroup(19, 6, 10.0);   // tell it about the "others" group - direction & octave leap
-    myArt->AddResonanceGroup(25, 5, 2.5);   // tell it about the "others" group - octave number (pitch / 12)
+    myArt->AddResonanceGroup(25, 5, 3.0);   // tell it about the "others" group - octave number (pitch / 12)
     
     myEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
     intervalEncoder = new SpatialEncoder(7);        // for encoding intervals
     othersEncoder = new SpatialEncoder(11);          // for other measures of the token sequence
-    othersEncoder->SetDecayAmount(0.35);
+    othersEncoder->SetDecayAmount(0.5);
     
     tempEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
     tempIntEncoder = new SpatialEncoder(7);        // for encoding intervals
     tempOtherEncoder = new SpatialEncoder(11);          // for other measures of the token sequence
-    tempOtherEncoder->SetDecayAmount(0.35);
+    tempOtherEncoder->SetDecayAmount(0.5);
     
     thirdSTM = new SpatialEncoder(32, true);
     tempThirdSTM = new SpatialEncoder(32, true);
     thirdSTM->SetDecayAmount(0.9);
     
     upperArt = new ART(0, 0.2, 0.6);
-    thirdArt = new ART(0, 1.0, 0.5);
+    thirdArt = new ART(0, 0.01, 0.6);
     
     featureVector = (double*)malloc(sizeof(double)*30); //new double(27);
     std::cout << "ReinforcementLearner -- ©2011 Benjamin Smith\n";
@@ -241,12 +241,12 @@ double ReinforcementLearner::CalcPredictedReward(int test)
 ////    res = (res > 0.05 ? 0.05 : res);
 //    res = pow(res * 100.0, 2.0) * M_PI_2;
 //    res = sin(res);   // TODO: this is scaled based on the observation that the residual tends to max out around 0.05.
-    if (myArt->GetResidual() == 1 || upperArt->GetResidual() == 1)      // it's creating a new category, so treat it seperately
-        return importSum * mySponteneity; // + thirdArt->GetImportanceSum() * mySponteneity * 10.0; // * (1.0 / recencyTotal);
-    else
+//    if (myArt->GetResidual() == 1 || upperArt->GetResidual() == 1)      // it's creating a new category, so treat it seperately
+//        return importSum * mySponteneity; // + thirdArt->GetImportanceSum() * mySponteneity * 10.0; // * (1.0 / recencyTotal);
+//    else
         if (!useRecency)
-            return myArt->GetResidual() * pow(importSum, IMPORTANCE_FACTOR) + 
-                    thirdArt->GetResidual() * pow(thirdArt->GetImportanceSum(), IMPORTANCE_FACTOR); //1.0 - fabs(0.07 - res); // * importSum;               // here we want a lot of change * something boring, or minimal change * something new
+            return sin(pow(myArt->GetResidual(), 0.5) * 3.0) * pow(importSum, IMPORTANCE_FACTOR) + 
+            sin(pow(thirdArt->GetResidual(), 0.5) * 3.0); // * pow(thirdArt->GetImportanceSum(), IMPORTANCE_FACTOR); //1.0 - fabs(0.07 - res); // * importSum;               // here we want a lot of change * something boring, or minimal change * something new
         else
             return res * pow(importSum, IMPORTANCE_FACTOR) * (1.0 - recency.at(cat) / recencyTotal);    // here we want a lot of change * something boring, or minimal change * something new
 }

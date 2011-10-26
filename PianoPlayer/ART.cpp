@@ -177,6 +177,7 @@ int ART::makeChoice(double workingVigilance)
                     mCategories.push_back(new ArtCategory(mDimensions));
                     mObservations.push_back(0);
                     mRecency.push_back(0);
+                    residual = 1;
                 }
                 chosen = true;
                 recentChoice = maxIndex;
