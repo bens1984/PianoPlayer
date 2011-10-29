@@ -21,26 +21,41 @@
 //		distance boolean - if true outputs accuracy of the input, how close it hits the center of the known category
 // class representation of each discovered category in the ART algorithm (each Node)
 
+// all of the ARTs:
+//  myArt - watches pitch, interval, and auxiliary features
+//  derivedArt - watches the inter-feature-vector distance and curvature
+//  upperArt - watches the outputs of myArt, derivedArt
+//  thirdArt - watches the category IDs from the upperArt
+
+// all of the STMs: (note that each has a "temp" version used during the prediction step)
+//  myEncoder - 12 pitch classes
+//  intervalEncoder - 7 interval classes
+//  othersEncoder - direction of step, octave leap?, register (pitch / 12)
+//  upperEncoder - encodes the outputs of the first level ARTs
+//  thirdSTM - encodes the category IDs from the upperEncoder
+
 #include <iostream>
 #include "ART.h"
 #include "SpatialEncoder.h"
+#include "MappedEncoder.h"
+#include "WaveletEncoder.h"
 
 #include "OSCSend.h"
 
 #define NEW_THRESHOLD 0.0001          // how mush residual a new category creation is "worth". When the predictor can't find
                                     // a known category with this much residual it will then consider creating new categories
-
-
 class ReinforcementLearner
 {
 private:
     SpatialEncoder *myEncoder, *intervalEncoder, *othersEncoder;
     SpatialEncoder *tempEncoder, *tempIntEncoder, *tempOtherEncoder;
-    ART *myArt;
+    ART *myArt, *derivedArt;
+    WaveletEncoder *distanceEncoder, *curvatureEncoder, *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
+    MappedEncoder   *upperEncoder, *tempUpperEncoder;
     ART *upperArt;  // a 2nd ART to watch the transitions between myArt's categories
     ART *thirdArt;  // watches resonances of lower ARTs
     SpatialEncoder *thirdSTM, *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch
-    double * featureVector;
+    double * featureVector, *prevFeatureVector;
     double occurrencesTotal, recencyTotal; // how much total resonance we have observed from the ART, size of recency vector
     vector<double> occurrences;    // how much resonance has been observed for each category
     vector<double> recency;         // a decaying sum of observed resonance for each category
@@ -54,7 +69,8 @@ private:
     int prevObs;    // previous pitch input
     double mySponteneity;
     bool    useRecency;     // do we weight resonance by a measure of recency?
-    
+private:
+    void CalcFeatureVectorDistance();
 public:
     ReinforcementLearner();
     ~ReinforcementLearner();

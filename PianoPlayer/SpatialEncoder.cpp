@@ -42,7 +42,7 @@ void SpatialEncoder::DoEncoding(int* tokens, int size)
 }
 void SpatialEncoder::AddToken(int token)
 {
-    if (dimensions > 0 && token >= 0) { // && token < dimensions) {
+    if (token >= 0) { // && token < dimensions) {
         if (token > dimensions-1)
             if (dynamicGrow)
             {

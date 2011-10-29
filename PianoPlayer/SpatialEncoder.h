@@ -19,8 +19,9 @@ enum DecayModel {
 
 class SpatialEncoder
 {
-private:
+protected:
     int         dimensions;
+private:
     double*     myEncoder;
     double      decayAmount;
     DecayModel  myDecay;

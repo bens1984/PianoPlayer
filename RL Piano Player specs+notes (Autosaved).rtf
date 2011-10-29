@@ -1,6 +1,7 @@
 {\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf360
-{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red46\green13\blue110;\red63\green110\blue116;\red38\green71\blue75;
+\red28\green0\blue207;\red100\green56\blue32;}
 \margl1440\margr1440\vieww9100\viewh9200\viewkind0
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
 
@@ -60,4 +61,54 @@ Dev Notes:\
 	I want it to be able to identify which features are significant and how they are being used. For example: folk music will treat many of the features as fixed (basically) or random, and others are used in specific ways (rhythm is regular but pushed/pulled, pitch is used melodically). How can this be deduced from a series of observations? \
 	Perhaps category widths along each dimension, how resonant categories relate together (which dimensions they relate along), between extreme points in the feature space which dimensions are being explored\'85 and how this is happening together (i.e. pitch varies greatly but rhythm remains constant, or timbre is noisy/random while register is very limited).\
 \
-	Trying to incorporate overall category value (i.e. how many times it shows up or how much it has resonated over the course of the piece) and how fresh or over-played an idea is (a decaying sum of resonance). CategoryValue * (1-overPlayed)? overPlayed is going to be very small values (if normalized) or increasingly large values.}
+	Trying to incorporate overall category value (i.e. how many times it shows up or how much it has resonated over the course of the piece) and how fresh or over-played an idea is (a decaying sum of resonance). CategoryValue * (1-overPlayed)? overPlayed is going to be very small values (if normalized) or increasingly large values.\
+\
+10/21/2011\
+	\
+	Letting it run for many minutes (10+) produces an interesting observation: it gets slower and slower, as more categories are added and the comparisons get more lengthy. Twice now it suddenly accelerates again, very noticeably. Is this because it has moved to much more "obvious" categorizations and doesn't have to search as deeply? Is there another explanation?\
+	It is very bizarre when it happens! It goes from ~130ms per prediction to 70ms or so and then fairly quickly slows down again (over 50 steps?) It could be something that happens coincidentally with the computer (i.e. CPU is freed) but unlikely, this computer has 8 powerful cores (and I'm maxing 1 fully).\
+\
+10/24/2011\
+\
+	These settings work pretty nicely:\
+		art1 - 0.1 LR, 0.95 vig, 0.8 decays, 0.4 decay on "others"\
+		upperArt - 0.05 LR, 0.6 Vig\
+		0.5 Import Factor, 0.975 recency decay, useRecency=false\
+\
+10/25/2011\
+\
+	In 2nd tier ART try using just the category ID in a standard STM, and also try using the fit vector as stimulus for an STM (so the resonance excites if it's > than the current level, otherwise it just decays). Which gives a better sense of the progression without losing too much information (the cat ID might be too lossy)?\
+	Perhaps add an ART that encodes the transitions between first level STM steps? (absolute value of each element - previous time step of same element) This might make some very interesting patterns as the RL tries to maximize this.\
+	The 2nd tier ART (thirdART) should have a dynamic vigilance setting. As more dimensions are added to the feature vector it will become more particular, but it means that at first it is very accepting. I'm assuming this is not good, but maybe it's a feature?\
+\
+10/26/2011\
+\
+	Trying to understand the effects of LR and vigilance on the first and 3rd level arts (there is no 2nd level at the moment). Reward function is:\
+\pard\tx560\pardeftab560\ql\qnatural\pardirnatural
+
+\f1\fs22 \cf2 \CocoaLigature0 sin\cf0 (\cf2 pow\cf0 (\cf3 myArt\cf0 ->\cf4 GetResidual\cf0 (), \cf5 0.5\cf0 ) * \cf5 3.0\cf0 ) * \cf2 pow\cf0 (importSum, \cf6 IMPORTANCE_FACTOR\cf0 ) + \cf2 sin\cf0 (\cf2 pow\cf0 (\cf3 thirdArt\cf0 ->\cf4 GetResidual\cf0 (), \cf5 0.125\cf0 ) * \cf6 M_PI\cf0 ) * \cf5 4.0\cf0 ;
+\f0\fs24 \CocoaLigature1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+\cf0 	With 1st at 0.5/0.925 and 3rd at 0.5/0.98 it forces a high degree of similarity, and very slow progression through space. 3rd: 0.5/0.02 is so similar, I can't stipulate the difference.\
+	Setting 1st to 0.1/0.925 since this has interesting results when 3rd is turned off.\
+	Using seed: 60, 62, 64, 65, 67 and then it asks for 69 to run.\
+	Comparing 3rd 0.1/0.2 and 0.1/0.8 I can't categorize (or identify) the difference! 0.8 Is highly minimalist, but progresses to other ideas. 0.85 is much more fragmented, but still highly repetitious, basically covering the same ground but in a different order. 0.9 is more like 0.8, it seems that 0.85 (and perhaps different "pockets") are very different! I can't find any others yet\'85 0.845 diverges later but is more like 0.8 at first. 0.855 is good, 0.86 is back again. At 0.425 it repeats the same pattern over and over and over.\
+	0.01/0.85 goes back to the same old, same old. In fact' it's far more repetitious (as I might expect. 0.01 LR makes the categories form very slowly). 0.9/0.85 has some moments of long repetition (at the 12th 3rd category), but gradually moves further and further afield. 0.6/0.85 seems ok, in the middle I guess (it moves down an octave at category 27, which is unique).\
+	Found an error in the GetImportanceSum and fixed reward function to:\
+\pard\tx560\pardeftab560\ql\qnatural\pardirnatural
+
+\f1\fs22 \cf2 \CocoaLigature0 sin\cf0 (\cf2 pow\cf0 (\cf3 myArt\cf0 ->\cf4 GetResidual\cf0 (), \cf5 0.5\cf0 ) * \cf5 3.0\cf0 ) * \cf2 pow\cf0 (importSum, \cf6 IMPORTANCE_FACTOR\cf0 ) + \cf2 sin\cf0 (\cf2 pow\cf0 (\cf3 thirdArt\cf0 ->\cf4 GetResidual\cf0 (), \cf5 0.125\cf0 ) * \cf5 3.1\cf0 ) * \cf5 4.0\cf0  * thirdImportSum;\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f0\fs24 \cf0 \CocoaLigature1 	I need to incorporate distance between feature vectors at the next level. I think that's the place. Also, watching the variance of each feature dimension over long windows should give an idea of constraints, or style.\
+\
+10/27/2011\
+\
+	How do I split up STMs/ARTs? Should I take the Gjerdingen approach and lump it all into one big feature vector? My initial thoughts are to split out anything that doesn't always need to correlate. For example, the distance and curvature between feature vectors doesn't need to be explicitly tied to specific pitch sets. However, interval pattern is much more closely tied to pitch sequence. However, these could both be split apart and then compared at a second order ART.\
+	Perhaps the big lump approach is appropriate for classical music, where the elements (pitch, interval, rhythm) are not inseparable, but highly linked (chords change on the beat/bar, chord tones/passing tones tend to fall in different places in the meter). As opposed to more contemporary work where they are considered to be very separable (color/talia, etc.).\
+	Still, the same effect could be achieved with several STM/ARTs (one for each feature group) and then the linkage between them could be enforced more or less strictly (more reward for same/difference at the 2nd level).\
+\
+What it's doing:\
+	At each level (where an ART is in place and a resultant reward calculation) the RL is trying to incrementally explore the feature space. Due to the nature of spatial encoding this requires a notion of repetition & variation. If the ART is given another feature, it will try to vary it over time and find different relationships between the features.\
+	The nesting of ARTs causes }

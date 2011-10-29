@@ -97,4 +97,14 @@ Dev Notes:\
 	Found an error in the GetImportanceSum and fixed reward function to:\
 \pard\tx560\pardeftab560\ql\qnatural\pardirnatural
 
-\f1\fs22 \cf2 \CocoaLigature0 sin\cf0 (\cf2 pow\cf0 (\cf3 myArt\cf0 ->\cf4 GetResidual\cf0 (), \cf5 0.5\cf0 ) * \cf5 3.0\cf0 ) * \cf2 pow\cf0 (importSum, \cf6 IMPORTANCE_FACTOR\cf0 ) + \cf2 sin\cf0 (\cf2 pow\cf0 (\cf3 thirdArt\cf0 ->\cf4 GetResidual\cf0 (), \cf5 0.125\cf0 ) * \cf5 3.1\cf0 ) * \cf5 4.0\cf0  * thirdImportSum;}
+\f1\fs22 \cf2 \CocoaLigature0 sin\cf0 (\cf2 pow\cf0 (\cf3 myArt\cf0 ->\cf4 GetResidual\cf0 (), \cf5 0.5\cf0 ) * \cf5 3.0\cf0 ) * \cf2 pow\cf0 (importSum, \cf6 IMPORTANCE_FACTOR\cf0 ) + \cf2 sin\cf0 (\cf2 pow\cf0 (\cf3 thirdArt\cf0 ->\cf4 GetResidual\cf0 (), \cf5 0.125\cf0 ) * \cf5 3.1\cf0 ) * \cf5 4.0\cf0  * thirdImportSum;\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f0\fs24 \cf0 \CocoaLigature1 	I need to incorporate distance between feature vectors at the next level. I think that's the place. Also, watching the variance of each feature dimension over long windows should give an idea of constraints, or style.\
+\
+10/27/2011\
+\
+	How do I split up STMs/ARTs? Should I take the Gjerdingen approach and lump it all into one big feature vector? My initial thoughts are to split out anything that doesn't always need to correlate. For example, the distance and curvature between feature vectors doesn't need to be explicitly tied to specific pitch sets. However, interval pattern is much more closely tied to pitch sequence. However, these could both be split apart and then compared at a second order ART.\
+	Perhaps the big lump approach is appropriate for classical music, where the elements (pitch, interval, rhythm) are not inseparable, but highly linked (chords change on the beat/bar, chord tones/passing tones tend to fall in different places in the meter). As opposed to more contemporary work where they are considered to be very separable (color/talia, etc.).\
+	Still, the same effect could be achieved with several STM/ARTs (one for each feature group) and then the linkage between them could be enforced more or less strictly (more reward for same/difference at the 2nd level).}
