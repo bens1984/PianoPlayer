@@ -39,6 +39,7 @@
 #include "SpatialEncoder.h"
 #include "MappedEncoder.h"
 #include "WaveletEncoder.h"
+#include "AccumulationEncoder.h"
 
 #include "OSCSend.h"
 
@@ -47,14 +48,15 @@
 class ReinforcementLearner
 {
 private:
-    SpatialEncoder *myEncoder, *intervalEncoder, *othersEncoder;
+    SpatialEncoder *pitchEncoder, *intervalEncoder, *othersEncoder;
+    AccumulationEncoder *tonalityEncoder, *tempTonalityEncoder;
     SpatialEncoder *tempEncoder, *tempIntEncoder, *tempOtherEncoder;
-    ART *myArt, *derivedArt;
+    ART *pitchArt, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
     WaveletEncoder *distanceEncoder, *curvatureEncoder, *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
     MappedEncoder   *upperEncoder, *tempUpperEncoder;
     ART *upperArt;  // a 2nd ART to watch the transitions between myArt's categories
     ART *thirdArt;  // watches resonances of lower ARTs
-    SpatialEncoder *thirdSTM, *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch
+    MappedEncoder *thirdSTM, *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch
     double * featureVector, *prevFeatureVector;
     double occurrencesTotal, recencyTotal; // how much total resonance we have observed from the ART, size of recency vector
     vector<double> occurrences;    // how much resonance has been observed for each category
@@ -95,7 +97,7 @@ public:
     }
     double GetDistance()
     {
-        return myArt->calcDistance(chosenCategory);
+        return pitchArt->calcDistance(chosenCategory);
     }
     void SetSponteneity(double s)
     {

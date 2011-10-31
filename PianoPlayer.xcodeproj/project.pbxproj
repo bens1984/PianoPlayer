@@ -11,6 +11,7 @@
 		48278497144348330039E90F /* OSCSend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 48278494144348320039E90F /* OSCSend.cpp */; };
 		48278498144348330039E90F /* OSCReceive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 48278496144348330039E90F /* OSCReceive.cpp */; };
 		4827849B1443499B0039E90F /* liboscpack.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4827849A1443499B0039E90F /* liboscpack.a */; };
+		48B2CC9F145EF359008D5FC9 /* AccumulationEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 48B2CC9D145EF359008D5FC9 /* AccumulationEncoder.cpp */; };
 		A0047D6E1443603F00D839E0 /* SpatialEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0047D6C1443603F00D839E0 /* SpatialEncoder.cpp */; };
 		A04304D01459A29F00C8658A /* WaveletEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A04304CE1459A29F00C8658A /* WaveletEncoder.cpp */; };
 		A04304D41459A8BD00C8658A /* MappedEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A04304D21459A8BC00C8658A /* MappedEncoder.cpp */; };
@@ -40,6 +41,8 @@
 		48278495144348320039E90F /* OSCReceive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSCReceive.h; sourceTree = "<group>"; };
 		48278496144348330039E90F /* OSCReceive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = OSCReceive.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		4827849A1443499B0039E90F /* liboscpack.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liboscpack.a; path = code/oscpack/Mac/build/Release/liboscpack.a; sourceTree = DEVELOPER_DIR; };
+		48B2CC9D145EF359008D5FC9 /* AccumulationEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AccumulationEncoder.cpp; sourceTree = "<group>"; };
+		48B2CC9E145EF359008D5FC9 /* AccumulationEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AccumulationEncoder.h; sourceTree = "<group>"; };
 		A0047D6C1443603F00D839E0 /* SpatialEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = SpatialEncoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		A0047D6D1443603F00D839E0 /* SpatialEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpatialEncoder.h; sourceTree = "<group>"; };
 		A04304CE1459A29F00C8658A /* WaveletEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WaveletEncoder.cpp; sourceTree = "<group>"; };
@@ -104,6 +107,8 @@
 				A04304D31459A8BD00C8658A /* MappedEncoder.h */,
 				A04304CE1459A29F00C8658A /* WaveletEncoder.cpp */,
 				A04304CF1459A29F00C8658A /* WaveletEncoder.h */,
+				48B2CC9D145EF359008D5FC9 /* AccumulationEncoder.cpp */,
+				48B2CC9E145EF359008D5FC9 /* AccumulationEncoder.h */,
 			);
 			path = PianoPlayer;
 			sourceTree = "<group>";
@@ -164,6 +169,7 @@
 				A0047D6E1443603F00D839E0 /* SpatialEncoder.cpp in Sources */,
 				A04304D01459A29F00C8658A /* WaveletEncoder.cpp in Sources */,
 				A04304D41459A8BD00C8658A /* MappedEncoder.cpp in Sources */,
+				48B2CC9F145EF359008D5FC9 /* AccumulationEncoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

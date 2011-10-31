@@ -36,8 +36,8 @@ void SpatialEncoder::DoEncoding(int* tokens, int size)
     if (dimensions > 0) // && token < dimensions) {
     {
         DecayEncoding(decayAmount);
-        for (int i = 0; i < size; i++)
-            AddToken(tokens[i]);
+//        for (int i = 0; i < size; i++)
+            AddToken(tokens, size);
     }
 }
 void SpatialEncoder::AddToken(int token)

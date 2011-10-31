@@ -21,10 +21,10 @@ class SpatialEncoder
 {
 protected:
     int         dimensions;
-private:
-    double*     myEncoder;
-    double      decayAmount;
     DecayModel  myDecay;
+    double      decayAmount;
+    double*     myEncoder;
+private:
     bool        dynamicGrow;    // allow the size of the STM to grow if new tokens are input?
 public:
     SpatialEncoder(int tokenCount, bool dynamic = false);
@@ -33,7 +33,7 @@ public:
     void DoEncoding(int token);
     void DoEncoding(int* tokens, int size);
     
-    void AddToken(int token);
+    virtual void AddToken(int token);
     void AddToken(int* tokens, int size);    // input several tokens at once
     void DecayEncoding(const double& scalar);
     

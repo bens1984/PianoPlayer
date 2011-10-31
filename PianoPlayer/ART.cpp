@@ -177,7 +177,7 @@ int ART::makeChoice(double workingVigilance)
                     mCategories.push_back(new ArtCategory(mDimensions));
                     mObservations.push_back(0);
                     mRecency.push_back(0);
-                    residual = 1;
+                    //residual = 1;
                 }
                 chosen = true;
                 recentChoice = maxIndex;
@@ -218,22 +218,22 @@ int ART::PredictChoice(double workingVigilance)
                 max = choices[i];
                 maxIndex = i;
             }
-        if (maxIndex != -1)
+        if (maxIndex != -1) // we've exhausted the search and no match was found!
         {          // if above vigilence then learn from it
-            if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
-            {
+//            if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
+//            {
                 if (maxIndex == mCategories.size()-1)   // it would be a new category
-                    residual = 1; //mDimensions;   // new categories are too chaotic for us to privilege
+                    residual = 1.0-workingVigilance; //1.0; //mDimensions;   // new categories are too chaotic for us to privilege
                 else
                     residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,1.0); //mLearnRate); // <- figure out how much residual would occur
                 chosen = true;
                 recentChoice = maxIndex;
-            }
-            else	// failed the mVigilance test.
-            {
-                choices[maxIndex] = -1; // reset, try again
-                maxIndex = -1;
-            }
+//            }
+//            else	// failed the mVigilance test.
+//            {
+//                choices[maxIndex] = -1; // reset, try again
+//                maxIndex = -1;
+//            }
         } else
             chosen = true;
     }	// otherwise look again.
