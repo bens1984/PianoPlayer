@@ -107,4 +107,8 @@ Dev Notes:\
 \
 	How do I split up STMs/ARTs? Should I take the Gjerdingen approach and lump it all into one big feature vector? My initial thoughts are to split out anything that doesn't always need to correlate. For example, the distance and curvature between feature vectors doesn't need to be explicitly tied to specific pitch sets. However, interval pattern is much more closely tied to pitch sequence. However, these could both be split apart and then compared at a second order ART.\
 	Perhaps the big lump approach is appropriate for classical music, where the elements (pitch, interval, rhythm) are not inseparable, but highly linked (chords change on the beat/bar, chord tones/passing tones tend to fall in different places in the meter). As opposed to more contemporary work where they are considered to be very separable (color/talia, etc.).\
-	Still, the same effect could be achieved with several STM/ARTs (one for each feature group) and then the linkage between them could be enforced more or less strictly (more reward for same/difference at the 2nd level).}
+	Still, the same effect could be achieved with several STM/ARTs (one for each feature group) and then the linkage between them could be enforced more or less strictly (more reward for same/difference at the 2nd level).\
+\
+What it's doing:\
+	At each level (where an ART is in place and a resultant reward calculation) the RL is trying to incrementally explore the feature space. Due to the nature of spatial encoding this requires a notion of repetition & variation. If the ART is given another feature, it will try to vary it over time and find different relationships between the features.\
+	The nesting of ARTs causes }
