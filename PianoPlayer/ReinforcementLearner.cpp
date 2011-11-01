@@ -8,20 +8,21 @@
 //#define UPPERART  // define to use a wide vigilance ART at the first level in addition to the fine/narrow/high vigilance ART
 //#define UPPER_DERIVED_ART
 
-#define IMPORTANCE_FACTOR 0.25       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
+#define IMPORTANCE_FACTOR 1.0       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
 
 #define FEATURE_SIZE 65             // number of elements in the first level feature vector
 #define FEATURE_SIZE_1 0.015384615
 
-#define RESIDUAL_CURVE 0.1        // exponent to raise residual amount to
+#define MAXIMAL_RESIDUAL 0.06        // if the residual = this then the reward = 1!
+#define RESIDUAL_CURVE 1.0        // exponent to raise residual amount to
 
 #include "ReinforcementLearner.h"
 
 ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/(double)FEATURE_SIZE), recencyTotal(0.0), useRecency(false) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    pitchArt = new ART(0, 0.9, 0.925);    // params: choice, learning rate, vigilance
-    intervalArt = new ART(0, 0.9, 0.925);
-    othersArt = new ART(0, 0.9, 0.925);
+    pitchArt = new ART(0, 0.7, 0.925);    // params: choice, learning rate, vigilance
+    intervalArt = new ART(0, 0.7, 0.925);
+    othersArt = new ART(0, 0.4, 0.925);
 //    myArt->AddResonanceGroup(0, 12, 12.0);   // tell it about the pitch group
 //    myArt->AddResonanceGroup(12, 7, 7.0);   // tell it about the interval group
 //    myArt->AddResonanceGroup(19, 23, 12.0);   // tell it about the interval group
@@ -29,13 +30,13 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
 //    myArt->AddResonanceGroup(48, 5, 3.0);   // tell it about the "others" group - octave number (pitch / 12)
     
     pitchEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
-    tonalityEncoder = new AccumulationEncoder(12, 0.05);
+    tonalityEncoder = new AccumulationEncoder(12, 0.025);
     intervalEncoder = new SpatialEncoder(30);        // for encoding intervals - 7 ICs followed by 11 down, unison, 11 up
     othersEncoder = new SpatialEncoder(11);          // for other measures of the token sequence
     othersEncoder->SetDecayAmount(0.5);
     
     tempEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
-    tempTonalityEncoder = new AccumulationEncoder(12, 0.05);    // for pitch classes as a tonality measure
+    tempTonalityEncoder = new AccumulationEncoder(12, 0.025);    // for pitch classes as a tonality measure
     tempIntEncoder = new SpatialEncoder(30);        // for encoding intervals
     tempOtherEncoder = new SpatialEncoder(11);          // for other measures of the token sequence
     tempOtherEncoder->SetDecayAmount(0.5);
@@ -48,7 +49,7 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
     upperEncoder = new MappedEncoder();
     upperArt = new ART(0, 0.2, 0.6);
 #endif
-    thirdArt = new ART(0, 1.0, 0.85);
+    thirdArt = new ART(0, 0.9, 0.85);
     
     distanceEncoder = new WaveletEncoder(4);
     tempDistanceEncoder = new WaveletEncoder(4);
@@ -175,14 +176,22 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
     delete fitVector;   // this is assigned just for us, we're responsible for cleaning it up.
     fitVector = 0x00;
     
+//    cout << pitchArt->GetResidual() << ", " << intervalArt->GetResidual() << ", " << othersArt->GetResidual() << endl;
     double res = pitchArt->GetResidual() + intervalArt->GetResidual() + othersArt->GetResidual();
-    res = (res > 1.0 ? 1.0 : res);
-    double powd = pow(res * 0.3333, RESIDUAL_CURVE);
-    cout << pitchArt->GetResidual() << ", " << intervalArt->GetResidual() << ", " << othersArt->GetResidual() << endl;
-    cout << ", pow: " <<
-        powd << ", sin: " << sin(powd * 3.13)
-    << endl;
-    return sin(powd) * pow(importSum, IMPORTANCE_FACTOR) // + sin(pow(thirdArt->GetResidual(), 0.5) * 3.1) * 1.0 * pow(thirdImportSum, IMPORTANCE_FACTOR)
+//    cout << res;
+//    res = (res > 2.0 ? 2.0 : res) * 0.5;
+    cout << "----" << res << endl; //", sin: " << sin(powd * 4.7124) << endl;
+    if (res != 0)
+        res = MAXIMAL_RESIDUAL / res;
+    res = (res > 1 && res != 0 ? 1.0 / res : res);
+//    double powd = pow(res * 0.33334, RESIDUAL_CURVE);
+//    return sin(powd * 4.7124) 
+    double thirdRes = thirdArt->GetResidual();
+    if (thirdRes > 0)
+        thirdRes = MAXIMAL_RESIDUAL / thirdRes;
+    thirdRes = (thirdRes > 1 && thirdRes != 0 ? 1.0 / thirdRes : thirdRes);
+    return res * pow(importSum, IMPORTANCE_FACTOR) + thirdRes * pow(thirdImportSum, IMPORTANCE_FACTOR)
+    //+ sin(pow(thirdArt->GetResidual(), 0.5) * 3.1) * 1.0 * pow(thirdImportSum, IMPORTANCE_FACTOR)
 #ifdef UPPER_DERIVED_ART
     + sin(upperArt->GetResidual() * M_PI) * pow(upperImport, IMPORTANCE_FACTOR)
 #endif
@@ -301,9 +310,17 @@ double ReinforcementLearner::CalcPredictedReward(int test)
 ////        cout << thirdArt->GetResidual() << "--" << thirdImportSum << "++" << sin(pow(thirdArt->GetResidual(), 0.125) * 3.1) << endl;
 //        cout << pitchArt->GetResidual() << ", " << intervalArt->GetResidual() << ", " << othersArt->GetResidual() << ", " << importSum << endl;
     double res = (pitchArt->GetResidual() + intervalArt->GetResidual() + othersArt->GetResidual());
-    res = (res > 1.0 ? 1.0 : res);
-    return sin(pow(res, RESIDUAL_CURVE) * 3.13) 
-            * pow(importSum, IMPORTANCE_FACTOR) // + sin(pow(thirdArt->GetResidual(), 0.5) * 3.1) * 1.0 * pow(thirdImportSum, IMPORTANCE_FACTOR)
+    //    res = (res > 2.0 ? 2.0 : res) * 0.5;
+    if (res != 0)
+        res = MAXIMAL_RESIDUAL / res;
+    res = (res > 1 && res != 0 ? 1.0 / res : res);
+    
+    double thirdRes = thirdArt->GetResidual();
+    if (thirdRes > 0)
+        thirdRes = MAXIMAL_RESIDUAL / thirdRes;
+    thirdRes = (thirdRes > 1 && thirdRes != 0 ? 1.0 / thirdRes : thirdRes);
+    
+    return res * pow(importSum, IMPORTANCE_FACTOR) + thirdRes * pow(thirdImportSum, IMPORTANCE_FACTOR)
 #ifdef UPPER_DERIVED_ART
         + sin(upperArt->GetResidual() * M_PI) * pow(upperImport, IMPORTANCE_FACTOR)
 #endif
