@@ -9,10 +9,11 @@
 #include "WaveletEncoder.h"
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 
 WaveletEncoder::WaveletEncoder(int numOfBanks) : filterCount(numOfBanks)
 {
-    filterBank = new double(filterCount);
+    filterBank = (double*)malloc(sizeof(double)*filterCount);
     for (int i = 0; i < numOfBanks; i++)
         filterBank[i] = 0.0;
 }

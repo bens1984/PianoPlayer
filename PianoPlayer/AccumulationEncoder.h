@@ -16,6 +16,7 @@ public:
     AccumulationEncoder(int tokenCount, float accumulation, bool dynamic = false);
     ~AccumulationEncoder();
     
+    void DoEncoding(int token);
     void AddToken(int token);
     
     void DecayEncoding(const double& scalar);

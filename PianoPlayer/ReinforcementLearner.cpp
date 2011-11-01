@@ -5,8 +5,8 @@
 //  Created by Ben Smith on 10/9/11.
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
-//#define UPPERART  // define to use a wide vigilance ART at the first level in addition to the fine/narrow/high vigilance ART
-//#define UPPER_DERIVED_ART
+#define UPPERART  // define to use a wide vigilance ART at the first level in addition to the fine/narrow/high vigilance ART
+//  #define UPPER_DERIVED_ART
 
 #define IMPORTANCE_FACTOR 1.0       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
 
@@ -18,11 +18,12 @@
 
 #include "ReinforcementLearner.h"
 
-ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/(double)FEATURE_SIZE), recencyTotal(0.0), useRecency(false) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
+ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/(double)FEATURE_SIZE), recencyTotal(0.0), useRecency(false), prevFitVector(0x00), prevFitVectorSize(0), fitVectorDistances(0x00) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
     pitchArt = new ART(0, 0.7, 0.925);    // params: choice, learning rate, vigilance
     intervalArt = new ART(0, 0.7, 0.925);
     othersArt = new ART(0, 0.4, 0.925);
+    bigArt = new ART(0, 0.6, 0.8);
 //    myArt->AddResonanceGroup(0, 12, 12.0);   // tell it about the pitch group
 //    myArt->AddResonanceGroup(12, 7, 7.0);   // tell it about the interval group
 //    myArt->AddResonanceGroup(19, 23, 12.0);   // tell it about the interval group
@@ -47,15 +48,16 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
     
 #if defined UPPERART || defined UPPER_DERIVED_ART
     upperEncoder = new MappedEncoder();
-    upperArt = new ART(0, 0.2, 0.6);
+    upperEncoder->SetDecayAmount(0.8);
+    upperArt = new ART(0, 0.7, 0.75);
 #endif
-    thirdArt = new ART(0, 0.9, 0.85);
+    thirdArt = new ART(0, 0.7, 0.925);
     
     distanceEncoder = new WaveletEncoder(4);
     tempDistanceEncoder = new WaveletEncoder(4);
     curvatureEncoder = new WaveletEncoder(4);
     tempCurvatureEncoder = new WaveletEncoder(4);
-    derivedArt = new ART(0, 0.5, 0.99);
+    derivedArt = new ART(0, 0.75, 0.99);
     
     featureVector = (double*)malloc(sizeof(double)*FEATURE_SIZE); //new double(27);
     prevFeatureVector = (double*)malloc(sizeof(double)*FEATURE_SIZE); //new double(27);
@@ -66,6 +68,7 @@ ReinforcementLearner::~ReinforcementLearner()
     delete pitchArt;
     delete intervalArt;
     delete othersArt;
+    delete bigArt;
     delete pitchEncoder;
     delete tonalityEncoder;
     delete intervalEncoder;
@@ -96,7 +99,45 @@ void ReinforcementLearner::CalcFeatureVectorDistance()
     double distance = 0.0;
     for (int i = 0; i < FEATURE_SIZE; i++)
         distance += pow(featureVector[i] - prevFeatureVector[i], 2.0);
-    distanceEncoder->AddSample(pow(distance * FEATURE_SIZE_1, 0.1));
+    distanceEncoder->AddSample(pow(distance, 0.5) * 0.25); // * FEATURE_SIZE_1
+}
+double ReinforcementLearner::CalcFitVectorDistance()
+{
+    double distance = 0.0;
+    for (int i = 0; i < prevFitVectorSize; i++)
+    {
+        fitVectorDistances[i] = fabs(fitVector[i] - prevFitVector[i]);
+        distance += pow(fitVectorDistances[i], 2.0);
+    }
+    distance = sqrt(distance);
+    return distance;
+}
+double ReinforcementLearner::DoFirstLevelDistance(bool retain)
+{
+    bigArt->ProcessNewObservation(featureVector, FEATURE_SIZE);
+    fitVector = bigArt->GetCategoryChoice();
+    int fitSize = bigArt->GetCategoryCount();
+    double distance = CalcFitVectorDistance();
+    if (retain && prevFitVectorSize != fitSize)
+    {
+        if (prevFitVector != 0x00)
+            delete prevFitVector;
+        if (fitVectorDistances != 0x00)
+            delete fitVectorDistances;
+        prevFitVector = (double*)malloc(fitSize*sizeof(double));
+        fitVectorDistances = (double*)malloc(fitSize*sizeof(double));
+        prevFitVectorSize = fitSize;
+    }
+    double ret = bigArt->GetImportanceSum();
+    if (retain)
+    {
+        memcpy(prevFitVector, fitVector, fitSize*8);
+        bigArt->makeChoice();
+    } else
+        bigArt->PredictChoice();
+    
+    delete fitVector;
+    return ret;
 }
 double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is the next pitch that is observed
 {
@@ -140,6 +181,13 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
     intervalArt->ProcessNewObservation(&featureVector[24], 30); // 7 ICs + 23 intervals
     othersArt->ProcessNewObservation(&featureVector[54], 11);
     
+    double bigImport = DoFirstLevelDistance(true);
+    
+    int fitSize = bigArt->GetCategoryCount();
+    OSCSend::getSingleton()->oscSend("/distance", fitSize, fitVector);
+//    OSCSend::getSingleton()->oscSend("/derived", fitSize, prevFitVector);
+    OSCSend::getSingleton()->oscSend("/big", fitSize, fitVectorDistances);
+    
 //    fitVector = 
 //    pitchArt->GetCategoryChoice(); // get the resonance of each category against this input. // if we don't need the vector then this call is supurfluous
 //    intervalArt->GetCategoryChoice();
@@ -147,21 +195,24 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
     //int fitSize = pitchArt->GetCategoryCount();    // how long the fitVector is
     //        importance = myArt->GetImportance();
     
-    double importSum = (pitchArt->GetImportanceSum() * intervalArt->GetImportanceSum() * othersArt->GetImportanceSum());    // GetImportanceSum must be called before makeChoice, as makeChoice is destructive to the resonance measure
+    double importSum = (pitchArt->GetImportanceSum() + intervalArt->GetImportanceSum() + othersArt->GetImportanceSum()) * 0.33334;    // GetImportanceSum must be called before makeChoice, as makeChoice is destructive to the resonance measure
     double thirdImportSum = thirdArt->GetImportanceSum();
     
     chosenCategory = pitchArt->makeChoice() << 16;	// make a choice and learn from it. This modifies the resonances, so the must be received first
     chosenCategory += intervalArt->makeChoice() << 8;
     chosenCategory += othersArt->makeChoice();
-#if defined UPPERART 
-    upperArt->ProcessNewObservation(featureVector, FEATURE_SIZE);
-    upperArt->makeChoice();
-#elif defined UPPER_DERIVED_ART
+    
     derivedArt->ProcessNewObservation(distanceEncoder->GetEncoding(), distanceEncoder->GetEncoderSize());
+    derivedArt->makeChoice();
+#if defined UPPERART 
+    upperArt->ProcessNewObservation(fitVectorDistances, fitSize);
+    fitVector = upperArt->GetCategoryChoice();
+    OSCSend::getSingleton()->oscSend("/upper", upperArt->GetCategoryCount(), fitVector);
+    delete fitVector;
+    chosenCategory = upperArt->makeChoice();
+#elif defined UPPER_DERIVED_ART
     upperEncoder->DoEncoding(chosenCategory << 8);
     upperEncoder->AddToken(derivedArt->makeChoice());
-    OSCSend::getSingleton()->oscSend("/distance", distanceEncoder->GetDimensions(), distanceEncoder->GetEncoding());
-    OSCSend::getSingleton()->oscSend("/derived", upperEncoder->GetDimensions(), upperEncoder->GetEncoding());
     upperArt->ProcessNewObservation(upperEncoder->GetEncoding(), upperEncoder->GetDimensions());
     chosenCategory = upperArt->makeChoice();
 #endif    
@@ -186,11 +237,11 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
     res = (res > 1 && res != 0 ? 1.0 / res : res);
 //    double powd = pow(res * 0.33334, RESIDUAL_CURVE);
 //    return sin(powd * 4.7124) 
-    double thirdRes = thirdArt->GetResidual();
+    double thirdRes = bigArt->GetResidual();
     if (thirdRes > 0)
         thirdRes = MAXIMAL_RESIDUAL / thirdRes;
     thirdRes = (thirdRes > 1 && thirdRes != 0 ? 1.0 / thirdRes : thirdRes);
-    return res * pow(importSum, IMPORTANCE_FACTOR) + thirdRes * pow(thirdImportSum, IMPORTANCE_FACTOR)
+    return (res * pow(importSum, IMPORTANCE_FACTOR) + thirdRes * bigImport + pow(thirdImportSum, IMPORTANCE_FACTOR)) * 0.33334
     //+ sin(pow(thirdArt->GetResidual(), 0.5) * 3.1) * 1.0 * pow(thirdImportSum, IMPORTANCE_FACTOR)
 #ifdef UPPER_DERIVED_ART
     + sin(upperArt->GetResidual() * M_PI) * pow(upperImport, IMPORTANCE_FACTOR)
@@ -266,14 +317,16 @@ double ReinforcementLearner::CalcPredictedReward(int test)
 //    fitVector = pitchArt->GetCategoryChoice();                         // get the resonance of each category
 //    int fitVectorSize = myArt->GetCategoryCount();
     
+    double bigImport = DoFirstLevelDistance(false);
+    
     double importSum = (pitchArt->GetImportanceSum() + intervalArt->GetImportanceSum() + othersArt->GetImportanceSum()) * 0.33334;
     
     int cat = pitchArt->PredictChoice() << 16;
     cat += intervalArt->PredictChoice() << 8;
     cat += othersArt->PredictChoice();
 #if defined UPPERART 
-    upperArt->ProcessNewObservation(featureVector, FEATURE_SIZE);
-    upperArt->PredictChoice();
+    upperArt->ProcessNewObservation(fitVectorDistances, prevFitVectorSize);
+    cat = upperArt->PredictChoice();
 #elif defined UPPER_DERIVED_ART
     derivedArt->ProcessNewObservation(distanceEncoder->GetEncoding(), distanceEncoder->GetEncoderSize());
     upperEncoder->DoEncoding(chosenCategory << 8);
@@ -288,9 +341,6 @@ double ReinforcementLearner::CalcPredictedReward(int test)
     thirdArt->ProcessNewObservation(tempThirdSTM->GetEncoding(), tempThirdSTM->GetDimensions());
     double thirdImportSum = thirdArt->GetImportanceSum();   // must be called before make/predictChoice as those function destroy the choice vector
     thirdArt->PredictChoice();
-    
-//    delete fitVector;   // it gets assigned just for us, so clear it out
-//    fitVector = 0x00;
     
 //    double res = myArt->GetResidual() 
 //#ifdef UPPERART 
@@ -315,12 +365,12 @@ double ReinforcementLearner::CalcPredictedReward(int test)
         res = MAXIMAL_RESIDUAL / res;
     res = (res > 1 && res != 0 ? 1.0 / res : res);
     
-    double thirdRes = thirdArt->GetResidual();
+    double thirdRes = bigArt->GetResidual();
     if (thirdRes > 0)
         thirdRes = MAXIMAL_RESIDUAL / thirdRes;
     thirdRes = (thirdRes > 1 && thirdRes != 0 ? 1.0 / thirdRes : thirdRes);
     
-    return res * pow(importSum, IMPORTANCE_FACTOR) + thirdRes * pow(thirdImportSum, IMPORTANCE_FACTOR)
+    return (res * pow(importSum, IMPORTANCE_FACTOR) + thirdRes * bigImport + pow(thirdImportSum, IMPORTANCE_FACTOR)) * 0.3334 //* thirdRes
 #ifdef UPPER_DERIVED_ART
         + sin(upperArt->GetResidual() * M_PI) * pow(upperImport, IMPORTANCE_FACTOR)
 #endif

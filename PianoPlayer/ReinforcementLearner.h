@@ -55,6 +55,7 @@ private:
     WaveletEncoder *distanceEncoder, *curvatureEncoder, *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
     MappedEncoder   *upperEncoder, *tempUpperEncoder;
     ART *upperArt;  // a 2nd ART to watch the transitions between myArt's categories
+    ART *bigArt;    // a first level ART to watch all of the features together
     ART *thirdArt;  // watches resonances of lower ARTs
     MappedEncoder *thirdSTM, *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch
     double * featureVector, *prevFeatureVector;
@@ -65,6 +66,8 @@ private:
 //    double mChoice, mLearnRate, mVigilance;	// store for reset
     // outputs from processing in the ART
     const double *fitVector;
+    double *prevFitVector, *fitVectorDistances;
+    int prevFitVectorSize;
     double *importance;
     int chosenCategory;
     double distance;
@@ -73,6 +76,8 @@ private:
     bool    useRecency;     // do we weight resonance by a measure of recency?
 private:
     void CalcFeatureVectorDistance();
+    double CalcFitVectorDistance();   // distance between prevFitVector and fitVector
+    double DoFirstLevelDistance(bool retain);     // get the distance between first level resonance vectors and learn on it, returns importanceSum
 public:
     ReinforcementLearner();
     ~ReinforcementLearner();

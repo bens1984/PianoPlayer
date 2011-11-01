@@ -10,7 +10,7 @@
 #include "SpatialEncoder.h"
 #include <string.h>
 
-SpatialEncoder::SpatialEncoder(int tokenCount, bool dynamic) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.5), dynamicGrow(dynamic)
+SpatialEncoder::SpatialEncoder(int tokenCount, bool dynamic) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(0.6), dynamicGrow(dynamic)
 {
     if (dimensions == 0)
         dimensions = 2;

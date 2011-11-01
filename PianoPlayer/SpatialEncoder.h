@@ -30,7 +30,7 @@ public:
     SpatialEncoder(int tokenCount, bool dynamic = false);
     ~SpatialEncoder();
     
-    void DoEncoding(int token);
+    virtual void DoEncoding(int token);
     void DoEncoding(int* tokens, int size);
     
     virtual void AddToken(int token);
