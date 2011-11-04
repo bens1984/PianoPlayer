@@ -16,6 +16,8 @@ using namespace std;
 
 int main (int argc, const char * argv[])
 {
+    double rewards[10];
+    bool analyze = true;
     ReinforcementLearner* myRL = new ReinforcementLearner(); //6, 0, 0.1, 0.95);
     OSCReceive myOSC;
     myOSC.StartReception();
@@ -35,6 +37,9 @@ int main (int argc, const char * argv[])
 //                for (int i = 0; i < 6; i++)
 //                    cout << input[i] << " ";
 //                cout << endl;
+                myRL->CalcPredictedReward(data->data[0], &rewards[0]);  // this is how we get the reward that we will receive for this observation
+                OSCSend::getSingleton()->oscSend("/rewards", 10, &rewards[0]);
+                
                 float IR = myRL->ProcessNewObservation(data->data[0]); //, data.data.size());
 //               cout << "Category: " << myRL->GetChosenCategory() << " distance: " << myRL->GetDistance() << endl;
 //                delete input;
@@ -42,14 +47,23 @@ int main (int argc, const char * argv[])
 //               cout << "Reward: " << IR << endl << endl;
                 OSCSend::getSingleton()->oscSend("/IR", 1, &IR);
                 
-                int nextStep = myRL->PredictMaximalInput();
-                OSCSend::getSingleton()->oscSend("/predict", 1, &nextStep);
+                if (!analyze)
+                {
+                    int nextStep = myRL->PredictMaximalInput();
+                    OSCSend::getSingleton()->oscSend("/predict", 1, &nextStep);
+                }
             } else if (data->header == oscSponteneity) {
                 myRL->SetSponteneity(data->data[0]);
             } else if (data->header == oscReset) {
                 ReinforcementLearner* oldRL = myRL;
                 myRL = new ReinforcementLearner();
                 delete oldRL;
+            } else if (data->header == oscAnalyze) {
+                analyze = !analyze;
+                if (analyze)
+                    cout << "Switching to analysis only mode." << endl;
+                else
+                    cout << "Switching to predictive mode." << endl;
             }
             delete data;
         }

@@ -35,7 +35,7 @@ public:
     
     virtual void AddToken(int token);
     void AddToken(int* tokens, int size);    // input several tokens at once
-    void DecayEncoding(const double& scalar);
+    virtual void DecayEncoding(const double& scalar);
     
     double* GetEncoding();
     int GetDimensions();

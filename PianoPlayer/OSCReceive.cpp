@@ -49,6 +49,10 @@ void ExamplePacketListener::ProcessMessage( const osc::ReceivedMessage& m, const
 		{
             d = new OSCData;
 			d->header = oscReset;
+        } else if( strcmp( m.AddressPattern(), "/analyze") == 0 )	// toggle between purely analyzing and predicting states
+		{
+            d = new OSCData;
+			d->header = oscAnalyze;
         } 
 		if (d->header != oscNothing)
 		{

@@ -12,6 +12,7 @@
 #include "OSCSend.h"
 
 #define RECENCY_DECAY_RATE  0.99     // how quickly the recency vector decays. This is how quickly ideas become familiar and no longer fresh
+#define OBSERVATION_VALUE 0.01      // how much an observation weights a category.
 
 //#define USING_RECENCY       // comment out to block using the recency vector during importance calculations
 
@@ -23,7 +24,7 @@ private:
     int mDimensions; // how many dimensions to match data on
     vector<ArtCategory*> mCategories;
     vector<ResonanceGroup> mResonanceWeights;
-    vector<int> mObservations;     // how many times each category has been seen. trying to measure how "confident" we are in the observation
+    vector<double> mObservations;     // how many times each category has been seen. trying to measure how "confident" we are in the observation
     int inputCount;  // how many inputs we have seen
     vector<double> mRecency;
     double maxRecency;

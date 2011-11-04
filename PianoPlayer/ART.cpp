@@ -193,7 +193,7 @@ int ART::makeChoice(double workingVigilance)
     if (maxIndex > -1)
     {
         inputCount++;
-        mObservations.at(maxIndex) += 1;
+        mObservations.at(maxIndex) = min(1.0, mObservations.at(maxIndex)+OBSERVATION_VALUE);
 #ifdef USING_RECENCY
         mRecency.at(maxIndex) += 0.1;
 #endif
@@ -279,7 +279,7 @@ double ART::GetImportanceSum()
 #ifdef USING_RECENCY
             importance += choices[i] * (mObservations.at(i) / (double)inputCount) * (1.0 - (mRecency.at(i) / recencyMax));
 #else
-            importance += choices[i]; // * (mObservations.at(i) / (double)inputCount);
+            importance += choices[i] * mObservations.at(i); // / (double)inputCount);
 #endif
         }
     }

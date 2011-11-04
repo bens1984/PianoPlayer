@@ -19,7 +19,7 @@ public:
     void DoEncoding(int token);
     void AddToken(int token);
     
-    void DecayEncoding(const double& scalar);
+//    void DecayEncoding(const double& scalar);
     
     void SetAccumulationAmount(float a);
     float GetAccumulationAmount() { return accumulationAmount; }

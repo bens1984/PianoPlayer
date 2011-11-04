@@ -40,6 +40,9 @@
 #include "MappedEncoder.h"
 #include "WaveletEncoder.h"
 #include "AccumulationEncoder.h"
+#include "TonalityEncoder.h"
+#include "SampledEncoder.h"
+#include "FeatureDistanceEncoder.h"
 
 #include "OSCSend.h"
 
@@ -49,10 +52,10 @@ class ReinforcementLearner
 {
 private:
     SpatialEncoder *pitchEncoder, *intervalEncoder, *othersEncoder;
-    AccumulationEncoder *tonalityEncoder, *tempTonalityEncoder;
+    TonalityEncoder *tonalityEncoder, *tempTonalityEncoder;
     SpatialEncoder *tempEncoder, *tempIntEncoder, *tempOtherEncoder;
     ART *pitchArt, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
-    WaveletEncoder *distanceEncoder, *curvatureEncoder, *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
+    FeatureDistanceEncoder *distanceEncoder, *curvatureEncoder, *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
     MappedEncoder   *upperEncoder, *tempUpperEncoder;
     ART *upperArt;  // a 2nd ART to watch the transitions between myArt's categories
     ART *bigArt;    // a first level ART to watch all of the features together
@@ -85,7 +88,7 @@ public:
     double ProcessNewObservation(const int& obs);  // this is the next pitch that is observed
     
     int PredictMaximalInput();      // look one step ahead and calculate what input value would be most rewarding
-    double CalcPredictedReward(int test);
+    double CalcPredictedReward(int test, double* rewards = 0x00);
     
     // ------- Accessors ----------
     const double *GetFitVector()

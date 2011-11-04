@@ -2,7 +2,7 @@
 {\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;}
 {\colortbl;\red255\green255\blue255;\red46\green13\blue110;\red63\green110\blue116;\red38\green71\blue75;
 \red28\green0\blue207;\red100\green56\blue32;}
-\margl1440\margr1440\vieww11200\viewh17280\viewkind0
+\margl1440\margr1440\vieww11120\viewh12060\viewkind0
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
 
 \f0\fs24 \cf0 Specs for Reinforcement Learner\
@@ -139,4 +139,11 @@ From handwritten notes:\
 	Any given feature will be explored in a continuous fashion, aiming for all possibilities. Derived features are necessary here to guide that exploration and reward internal cohesion with variation, rather than "random" (to us) wandering. For example, simply giving the RL 12 pitch classes will result in all tone rows and sub-rows eventually, but without any progression. Interval Classes aids this, encouraging exploration of interval relationships too.\
 	How can we model changes between categories? I can watch the resonance vectors and categorize those, but that doesn't give transitions. I can make an STM of the category IDs, but that loses closely related categories and is thus very finicky. Is the distance between successive resonance vectors significant? Perhaps feed that category ID into an STM and learn that!\
 		first order categorization of everything -> measure distance between resonance vectors -> categorize this -> feed this ID into a spatial encoder -> categorize this STM -> and watch for reward here!\
-	In code: bigArt for everything ->}
+	In code: bigArt for everything ->\
+\
+11/2/2011\
+\
+	We have these complex feature vectors now, perhaps too rich. For example: most recent PC and the interval vector serves to recover the previous material. Characterizing repetitions in that sequence. Better tonality representation (keep vector at 1s, then *0.5 for every occurrence of a pitch? Decay by adding 0.15 or so)\
+\
+11/3/2011\
+	settings at 0.6 LR, 0.925 Vig on most, 0.4 LR on others, 0.5, 0.8 on big, 0.5, 0.925 on third & derived}
