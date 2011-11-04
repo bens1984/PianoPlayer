@@ -12,12 +12,14 @@ class FeatureDistanceEncoder : public SpatialEncoder {
 private:
     double * averagePosition[4];
     int     inputSize;
+    
+    void ExpandBuffers(int newSize);
 public:
     FeatureDistanceEncoder(int dimensions);
     ~FeatureDistanceEncoder();
     
 //    void AddToken(double sample);
-    void DoEncoding(double * sample, int size);
+    void DoEncoding(const double * sample, int size);
     
     const double* GetAverages(int index);
     int GetInputSize();

@@ -10,6 +10,8 @@
 //  linear STM spatial encoder model
 #include <iostream>
 
+#define ENCODER_DECAY_RATE 0.7
+
 using namespace std;
 
 enum DecayModel {

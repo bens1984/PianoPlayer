@@ -139,11 +139,14 @@ From handwritten notes:\
 	Any given feature will be explored in a continuous fashion, aiming for all possibilities. Derived features are necessary here to guide that exploration and reward internal cohesion with variation, rather than "random" (to us) wandering. For example, simply giving the RL 12 pitch classes will result in all tone rows and sub-rows eventually, but without any progression. Interval Classes aids this, encouraging exploration of interval relationships too.\
 	How can we model changes between categories? I can watch the resonance vectors and categorize those, but that doesn't give transitions. I can make an STM of the category IDs, but that loses closely related categories and is thus very finicky. Is the distance between successive resonance vectors significant? Perhaps feed that category ID into an STM and learn that!\
 		first order categorization of everything -> measure distance between resonance vectors -> categorize this -> feed this ID into a spatial encoder -> categorize this STM -> and watch for reward here!\
-	In code: bigArt for everything ->\
+	In code: bigArt for everything -> distances in vectors -> upperArt watches distance, learns -> category ID is fed into thirdSTM\
 \
 11/2/2011\
 \
 	We have these complex feature vectors now, perhaps too rich. For example: most recent PC and the interval vector serves to recover the previous material. Characterizing repetitions in that sequence. Better tonality representation (keep vector at 1s, then *0.5 for every occurrence of a pitch? Decay by adding 0.15 or so)\
 \
 11/3/2011\
-	settings at 0.6 LR, 0.925 Vig on most, 0.4 LR on others, 0.5, 0.8 on big, 0.5, 0.925 on third & derived}
+	settings at 0.6 LR, 0.925 Vig on most, 0.4 LR on others, 0.5, 0.8 on big, 0.5, 0.925 on third & derived\
+\
+11/4/2011\
+	set the "distance" watcher to watch the amount of movement in the resonance vector of the "bigART"(watches all of the first level (L1) feature vectors combined). It now has a very interesting curve while following the Bach Cello suite1 prelude. I have it watching the distance between input at t and t-1, t and an average of 2, average of 4, and average of 8 (low pass filter). This should catch rapid alternations vs steady movement in a direction. Curvature should help this too.}
