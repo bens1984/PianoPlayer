@@ -10,7 +10,7 @@
 #include "SpatialEncoder.h"
 #include <string.h>
 
-SpatialEncoder::SpatialEncoder(int tokenCount, bool dynamic) : dimensions(tokenCount), myDecay(ExponentialDecay), decayAmount(ENCODER_DECAY_RATE), dynamicGrow(dynamic)
+SpatialEncoder::SpatialEncoder(int tokenCount, bool dynamic) : dimensions(tokenCount), myDecay(LinearDecay), decayAmount(ENCODER_DECAY_RATE), dynamicGrow(dynamic)
 {
     if (dimensions == 0)
         dimensions = 2;
@@ -72,8 +72,10 @@ void SpatialEncoder::DecayEncoding(const double& scalar)
 {
     switch (myDecay) {
         case LinearDecay:
-            for (int i = 0; i < dimensions; i++)
+            for (int i = 0; i < dimensions; i++) {
                 myEncoder[i] -= scalar;
+                myEncoder[i] = max(myEncoder[i], 0.0);
+            }
             break;
         case ExponentialDecay:
         default:

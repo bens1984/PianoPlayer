@@ -52,8 +52,8 @@ class ReinforcementLearner
 {
 private:
     SpatialEncoder *pitchEncoder, *intervalEncoder, *othersEncoder;
-    TonalityEncoder *tonalityEncoder, *tempTonalityEncoder;
-    SpatialEncoder *tempEncoder, *tempIntEncoder, *tempOtherEncoder;
+    TonalityEncoder *tonalityEncoder, *tempTonalityEncoder, *intervalClassEncoder, *tempIntervalClassEncoder;
+    SpatialEncoder *tempEncoder, *tempIntervalEncoder, *tempOtherEncoder;
     ART *pitchArt, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
     FeatureDistanceEncoder *distanceEncoder, *curvatureEncoder, *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
     MappedEncoder   *upperEncoder, *tempUpperEncoder;
@@ -80,7 +80,7 @@ private:
 private:
     void CalcFeatureVectorDistance();
     double CalcFitVectorDistance();   // distance between prevFitVector and fitVector
-    double DoFirstLevelDistance(bool retain);     // get the distance between first level resonance vectors and learn on it, returns importanceSum
+    double DoFirstLevelDistance(bool retain, int &categoryID);     // get the distance between first level resonance vectors and learn on it, returns importanceSum
 public:
     ReinforcementLearner();
     ~ReinforcementLearner();

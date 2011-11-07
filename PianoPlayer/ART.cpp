@@ -220,20 +220,20 @@ int ART::PredictChoice(double workingVigilance)
             }
         if (maxIndex != -1) // we've exhausted the search and no match was found!
         {          // if above vigilence then learn from it
-//            if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
-//            {
-//                if (maxIndex == mCategories.size()-1)   // it would be a new category
-//                    residual = 1.0-workingVigilance; //1.0; //mDimensions;   // new categories are too chaotic for us to privilege
-//                else
+            if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
+            {
+                if (maxIndex == mCategories.size()-1)   // it would be a new category
+                    residual = 1.0-workingVigilance; //1.0; //mDimensions;   // new categories are too chaotic for us to privilege
+                else
                     residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,1.0); //mLearnRate); // <- figure out how much residual would occur
                 chosen = true;
                 recentChoice = maxIndex;
-//            }
-//            else	// failed the mVigilance test.
-//            {
-//                choices[maxIndex] = -1; // reset, try again
-//                maxIndex = -1;
-//            }
+            }
+            else	// failed the mVigilance test.
+            {
+                choices[maxIndex] = -1; // reset, try again
+                maxIndex = -1;
+            }
         } else
             chosen = true;
     }	// otherwise look again.

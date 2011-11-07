@@ -16,7 +16,7 @@ using namespace std;
 
 int main (int argc, const char * argv[])
 {
-    double rewards[10];
+    double rewards[11];
     bool analyze = true;
     ReinforcementLearner* myRL = new ReinforcementLearner(); //6, 0, 0.1, 0.95);
     OSCReceive myOSC;
@@ -38,7 +38,7 @@ int main (int argc, const char * argv[])
 //                    cout << input[i] << " ";
 //                cout << endl;
                 myRL->CalcPredictedReward(data->data[0], &rewards[0]);  // this is how we get the reward that we will receive for this observation
-                OSCSend::getSingleton()->oscSend("/rewards", 10, &rewards[0]);
+                OSCSend::getSingleton()->oscSend("/rewards", 11, &rewards[0]);
                 
                 float IR = myRL->ProcessNewObservation(data->data[0]); //, data.data.size());
 //               cout << "Category: " << myRL->GetChosenCategory() << " distance: " << myRL->GetDistance() << endl;
