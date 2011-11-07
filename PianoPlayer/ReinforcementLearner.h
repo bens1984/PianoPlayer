@@ -57,7 +57,7 @@ private:
     ART *pitchArt, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
     FeatureDistanceEncoder *distanceEncoder, *curvatureEncoder, *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
     MappedEncoder   *upperEncoder, *tempUpperEncoder;
-    ART *upperArt;  // a 2nd ART to watch the transitions between myArt's categories
+    ART *upperArt, *secondArt;  // an "upper level" ART to watch the transitions between myArt's categories, and a "secondary" ART to watch BIG ART's resonances
     ART *bigArt;    // a first level ART to watch all of the features together
     ART *thirdArt;  // watches resonances of lower ARTs
     MappedEncoder *thirdSTM, *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch

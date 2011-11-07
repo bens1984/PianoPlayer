@@ -11,7 +11,7 @@ MappedEncoder::MappedEncoder() : SpatialEncoder(0, true) {
     
 }
 MappedEncoder::~MappedEncoder() {
-    
+    encoderMapping.clear();
 }
 
 int MappedEncoder::GetMapping(int inToken)
