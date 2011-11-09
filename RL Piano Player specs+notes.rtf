@@ -149,4 +149,10 @@ From handwritten notes:\
 	settings at 0.6 LR, 0.925 Vig on most, 0.4 LR on others, 0.5, 0.8 on big, 0.5, 0.925 on third & derived\
 \
 11/4/2011\
-	set the "distance" watcher to watch the amount of movement in the resonance vector of the "bigART"(watches all of the first level (L1) feature vectors combined). It now has a very interesting curve while following the Bach Cello suite1 prelude. I have it watching the distance between input at t and t-1, t and an average of 2, average of 4, and average of 8 (low pass filter). This should catch rapid alternations vs steady movement in a direction. Curvature should help this too.}
+	set the "distance" watcher to watch the amount of movement in the resonance vector of the "bigART"(watches all of the first level (L1) feature vectors combined). It now has a very interesting curve while following the Bach Cello suite1 prelude. I have it watching the distance between input at t and t-1, t and an average of 2, average of 4, and average of 8 (low pass filter). This should catch rapid alternations vs steady movement in a direction. Curvature should help this too.\
+\
+11/8/2011\
+\
+	rewinding the progress of reward functions to try and understand it piece by piece.\
+	First: going for a flatrate reward for learning residual. If it's measurable then we call it good, otherwise it's boring. Then we measure chaotic inputs by how much resonance the input generates, setting some sort of threshold for this measure. Things that are deemed really chaotic shouldn't be learned at all, or marked as a category that is unintelligible to the agent (i.e. "I heard this word but I don't know what it means and I can barely remember it").\
+	I could block the vigilance check when predicting (calculating reward for a given input). Distant inputs then train new categories which will always have a residual equal to the number of dimensions (or be locked to some constant). Their resonance will be good still.}

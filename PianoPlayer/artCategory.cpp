@@ -118,7 +118,7 @@ double ArtCategory::GetResidual(const double* input, int size, double mLearnRate
     for (int i = 0; i < size; i++)
     {
         double min = (input[i] < weighting[i] ? input[i] : weighting[i]);
-        residual += weighting[i] - (mLearnRate * min + inverseLearnRate * weighting[i]);
+        residual += pow(weighting[i] - (mLearnRate * min + inverseLearnRate * weighting[i]), 2.0);
     }
     
     return residual / (size * 0.5);

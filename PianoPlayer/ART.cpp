@@ -223,7 +223,7 @@ int ART::PredictChoice(double workingVigilance)
             if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
             {
                 if (maxIndex == mCategories.size()-1)   // it would be a new category
-                    residual = 1.0-workingVigilance; //1.0; //mDimensions;   // new categories are too chaotic for us to privilege
+                    residual = mDimensions; //1.0-workingVigilance; //1.0; //mDimensions;   // new categories are too chaotic for us to privilege
                 else
                     residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,1.0); //mLearnRate); // <- figure out how much residual would occur
                 chosen = true;
@@ -279,7 +279,7 @@ double ART::GetImportanceSum()
 #ifdef USING_RECENCY
             importance += choices[i] * (mObservations.at(i) / (double)inputCount) * (1.0 - (mRecency.at(i) / recencyMax));
 #else
-            importance += choices[i] * mObservations.at(i); // / (double)inputCount);
+            importance += choices[i]; // * mObservations.at(i); // / (double)inputCount);
 #endif
         }
     }
