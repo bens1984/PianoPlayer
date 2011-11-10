@@ -111,10 +111,12 @@ void SpatialEncoder::SetDecayModel(DecayModel model)
 }
 
 void SpatialEncoder::Copy(SpatialEncoder* that) {
-    dimensions = that->GetDimensions();
+    if (dimensions != that->GetDimensions()) {
+        delete myEncoder;   // clean up old encoder space
+        dimensions = that->GetDimensions();
+        myEncoder = (double*)malloc(dimensions*8);
+    }
     decayAmount = that->GetDecayAmount();
     myDecay = that->GetDecayModel();
-    delete myEncoder;   // clean up old encoder space
-    myEncoder = new double[dimensions];
     std::memcpy(myEncoder, that->GetEncoding(), dimensions*sizeof(double));
 }
