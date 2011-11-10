@@ -58,8 +58,9 @@ public:
 
     int makeChoice();
     int makeChoice(double workingVigilance);
-    int PredictChoice();
-    int PredictChoice(double workingVigilance);
+    double PredictChoice();
+    double PredictChoice(double workingVigilance);
+    int GetChosenCategoryID();
     double calcDistance(int cat);	// use set input and calculate distance to center of specified category
     const double *getWeights();	// return all of the weights of all of our categories
     const double* GetWeights(int index);

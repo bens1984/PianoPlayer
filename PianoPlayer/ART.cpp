@@ -200,11 +200,11 @@ int ART::makeChoice(double workingVigilance)
     }
     return maxIndex;
 }
-int ART::PredictChoice()
+double ART::PredictChoice()
 {
     return PredictChoice(mVigilance);
 }
-int ART::PredictChoice(double workingVigilance)
+double ART::PredictChoice(double workingVigilance)
 {
     int maxIndex = -1;
     bool chosen = false;		// check mVigilance stuff here...
@@ -222,9 +222,9 @@ int ART::PredictChoice(double workingVigilance)
         {          // if above vigilence then learn from it
             if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
             {
-                if (maxIndex == mCategories.size()-1)   // it would be a new category
-                    residual = mDimensions; //1.0-workingVigilance; //1.0; //mDimensions;   // new categories are too chaotic for us to privilege
-                else
+//                if (maxIndex == mCategories.size()-1)   // it would be a new category
+//                    residual = mDimensions; //1.0-workingVigilance; //1.0; //mDimensions;   // new categories are too chaotic for us to privilege
+//                else
                     residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,1.0); //mLearnRate); // <- figure out how much residual would occur
                 chosen = true;
                 recentChoice = maxIndex;
@@ -237,7 +237,10 @@ int ART::PredictChoice(double workingVigilance)
         } else
             chosen = true;
     }	// otherwise look again.
-    return maxIndex;
+    return choices[maxIndex];
+}
+int ART::GetChosenCategoryID() {
+    return recentChoice;
 }
 double ART::calcDistance(int cat)	// use set input and calculate distance to center of specified category
 {
