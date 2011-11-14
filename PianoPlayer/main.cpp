@@ -37,10 +37,10 @@ int main (int argc, const char * argv[])
 //                for (int i = 0; i < 6; i++)
 //                    cout << input[i] << " ";
 //                cout << endl;
-                myRL->CalcPredictedReward(data->data[0], &rewards[0]);  // this is how we get the reward that we will receive for this observation
+                myRL->CalcPredictedReward(data->data[0], data->data[1], &rewards[0]);  // this is how we get the reward that we will receive for this observation
                 OSCSend::getSingleton()->oscSend("/rewards", 11, &rewards[0]);
                 
-                float IR = myRL->ProcessNewObservation(data->data[0]); //, data.data.size());
+                float IR = myRL->ProcessNewObservation(data->data[0], data->data[1]); //, data.data.size());
 //               cout << "Category: " << myRL->GetChosenCategory() << " distance: " << myRL->GetDistance() << endl;
 //                delete input;
                 

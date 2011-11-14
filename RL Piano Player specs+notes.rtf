@@ -154,15 +154,26 @@ From handwritten notes:\
 11/8/2011\
 \
 	rewinding the progress of reward functions to try and understand it piece by piece.\
-	First: going for a flatrate reward for learning residual. If it's measurable then we call it good, otherwise it's boring. Then we measure chaotic inputs by how much resonance the input generates, setting some sort of threshold for this measure. Things that are deemed really chaotic shouldn't be learned at all, or marked as a category that is unintelligible to the agent (i.e. "I heard this word but I don't know what it means and I can barely remember it").\
+	First: going for a flat rate reward for learning residual. If it's measurable then we call it good, otherwise it's boring. Then we measure chaotic inputs by how much resonance the input generates, setting some sort of threshold for this measure. Things that are deemed really chaotic shouldn't be learned at all, or marked as a category that is unintelligible to the agent (i.e. "I heard this word but I don't know what it means and I can barely remember it").\
 	I could block the vigilance check when predicting (calculating reward for a given input). Distant inputs then train new categories which will always have a residual equal to the number of dimensions (or be locked to some constant). Their resonance will be good still.\
 \
 	BECAUSE import is currently calculated as the sum of all the resonances it will always try to build uniformly around what it knows. But maybe we want it to be willing to wander in a direction, mapping a more uneven shape in the feature space.\
 	TRYING: just looking at the residual, rewarding if it is in a specific band, otherwise it is chaotic or boring. Block vigilance check on prediction, if something is close and trains a new category that is good, if we allow vigilance checks it will create a new category which has a high residual by default, and would always be unrewarding (I will try with vigilance checks on as a second step, to see if it still creates categories accidentally, or as a result of another ART voting high).\
 	Keep vig on, just look at residual and resonance with chosen match (ignore the rest of the field). This will allow it to wander off in a direction. Still need to ensure that repetitions are encouraged, that creating new categories is relatively discouraged (but allowed), \
 \
-11/14/2011\
+11/13/2011\
 \
 	Calculating Import based on the best match, without a vigilance check, is promising thus far. It still has patterns I can hear (and like), but is not as thorough and mundane in its movement. I'm using a switched residual: either it's over a given a threshold and thus potentially interesting, or else it is boring. Residual * Importance is the reward (adding the different ART outputs together).\
 	Now I'm thinking about how to give it an idea of phrasing, of rhythm (which should aid phrasing), and of greater directionality (direction over several notes - maybe an average?). Do we hear phrases as ascending/descending in a binary fashion, or does the degree of ascending/descending matter much? Surely there must be cases where the degree of ascension is important.\
-	How can a phrase shape (continuous over a number of notes) be encoded into an ART readable/comparable form?}
+	How can a phrase shape (continuous over a number of notes) be encoded into an ART readable/comparable form?\
+\
+11/14/2011\
+\
+	Intrinsic Reward: the joy of playing, of experimenting, of being creative.\
+	Extrinsic Reward: the joy of reproducing something that matches externally perceived patterns (i.e. stylistic constraints).\
+\
+	I need to improve intrinsic reward a little, and give it features to handle phrase shape, directionality, rhythm (maybe dynamics?). Then add extrinsic reward, at first in the form of "externally identified categories always give X extrinsic reward." This can be done by tagging input as internally produced vs. externally produced (from a Bach sonata or someone improvising). Then the ARTs will be encouraged to play those categories and improvise from them (care must be taken to balance the ext/int rewards so that it doesn't get stuck on a few externally rewarding categories and become a broken record).\
+\
+	Idea for the first paper: Composition Lesson with a Reinforcement Learning Agent. Go through a series of different designs (intrinsic reward), analyzing its output and discussing the reasons. Give a nice introduction and justification: RL presents a compelling argument for describing aesthetic pleasure, creativity, beauty, etc. Such a biologically inspired model may be able to produce interesting, convincing music. Then compare a version with a short feature vector, one with a full feature vector, and different reward structures (considering cumulative importance, importance & residual, and residual alone).\
+\
+	I can process rhythm as inter-onset-interval, measured at the end of the interval (i.e. seen in combination with the pitch of the new event). How will prediction work, then? It will have to look out one step, in order to give duration. Or the synthesis will just be a little stilted, using the duration given as a pause (duration for the previous event) and then playing the new note.}

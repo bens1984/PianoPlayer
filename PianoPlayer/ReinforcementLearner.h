@@ -101,10 +101,10 @@ public:
     ReinforcementLearner();
     ~ReinforcementLearner();
     
-    double ProcessNewObservation(const int& obs);  // this is the next pitch that is observed
+    double ProcessNewObservation(const int& obs, const float& duration);  // this is the next pitch that is observed
     
     int PredictMaximalInput();      // look one step ahead and calculate what input value would be most rewarding
-    double CalcPredictedReward(int test, double* rewards = 0x00);
+    double CalcPredictedReward(int test, const float& duration, double* rewards = 0x00);
     
     // ------- Accessors ----------
     const double *GetFitVector()
