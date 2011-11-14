@@ -159,4 +159,10 @@ From handwritten notes:\
 \
 	BECAUSE import is currently calculated as the sum of all the resonances it will always try to build uniformly around what it knows. But maybe we want it to be willing to wander in a direction, mapping a more uneven shape in the feature space.\
 	TRYING: just looking at the residual, rewarding if it is in a specific band, otherwise it is chaotic or boring. Block vigilance check on prediction, if something is close and trains a new category that is good, if we allow vigilance checks it will create a new category which has a high residual by default, and would always be unrewarding (I will try with vigilance checks on as a second step, to see if it still creates categories accidentally, or as a result of another ART voting high).\
-	Keep vig on, just look at residual and resonance with chosen match (ignore the rest of the field). This will allow it to wander off in a direction. Still need to ensure that repetitions are encouraged, that creating new categories is relatively discouraged (but allowed), }
+	Keep vig on, just look at residual and resonance with chosen match (ignore the rest of the field). This will allow it to wander off in a direction. Still need to ensure that repetitions are encouraged, that creating new categories is relatively discouraged (but allowed), \
+\
+11/14/2011\
+\
+	Calculating Import based on the best match, without a vigilance check, is promising thus far. It still has patterns I can hear (and like), but is not as thorough and mundane in its movement. I'm using a switched residual: either it's over a given a threshold and thus potentially interesting, or else it is boring. Residual * Importance is the reward (adding the different ART outputs together).\
+	Now I'm thinking about how to give it an idea of phrasing, of rhythm (which should aid phrasing), and of greater directionality (direction over several notes - maybe an average?). Do we hear phrases as ascending/descending in a binary fashion, or does the degree of ascending/descending matter much? Surely there must be cases where the degree of ascension is important.\
+	How can a phrase shape (continuous over a number of notes) be encoded into an ART readable/comparable form?}

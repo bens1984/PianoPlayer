@@ -6,6 +6,7 @@
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
 
+#import <dispatch/dispatch.h>
 #include "ART.h"
 
 ART::ART(double _choice, double _learnRate, double _Vigilance) : mDimensions(19), residual(0), choices(0x00), inputCount(0), maxRecency(0)
@@ -96,15 +97,15 @@ inline void ART::complementCode()
 }
 void ART::setInput(const double *_in, int size)
 {
-    if (size > 0 && size > mDimensions)
-    {
+//    if (size > 0 && size > mDimensions)
+//    {
         mDimensions = size;
         if (input != 0x00)
             delete input;
         input = (double*)malloc(sizeof(double)*size*2); //new double(size*2);
         for (int i = 0; i < mCategories.size(); i++)
             mCategories.at(i)->resizeCategory(mDimensions);
-    }
+//    }
     for (int i = 0; i < size; i++)
     {
         input[i*2] = _in[i];
@@ -128,19 +129,22 @@ int ART::increaseVigilance()
 }
 void ART::FillCategoryChoice()
 {
-    if (choiceSize < mCategories.size())
-    {
+//    if (choiceSize < mCategories.size())
+//    {
+    if (choices != 0x00)
         delete choices;
-        choices = new double[mCategories.size()];
-        choiceSize = mCategories.size();
-    }
+    choices = (double*)malloc(sizeof(double) * mCategories.size()); //new double[mCategories.size()];
+    choiceSize = mCategories.size();
+//    }
     // check against all existing categories, and 1 empty one
     if (mDimensions > 0)
     {
         if (mResonanceWeights.size() == 0)
             mResonanceWeights.push_back(ResonanceGroup(0, mDimensions, mDimensions));
-        for (int i = 0; i < mCategories.size(); i++)
-            choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice, mResonanceWeights);  // pass in a descriptor for the feature vector
+        dispatch_apply(mCategories.size(), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), 
+                       ^(size_t i){ choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice, mResonanceWeights);});
+//        for (int i = 0; i < mCategories.size(); i++)
+//            choices[i] = mCategories.at(i)->Choose(input, mDimensions*2, mChoice, mResonanceWeights);  // pass in a descriptor for the feature vector
     }
 }
 void ART::DecayRecency()
@@ -220,20 +224,20 @@ double ART::PredictChoice(double workingVigilance)
             }
         if (maxIndex != -1) // we've exhausted the search and no match was found!
         {          // if above vigilence then learn from it
-            if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
-            {
+//            if (mCategories.at(maxIndex)->mVigilance(input,mDimensions*2,workingVigilance) || mCategories.size() == 1)		// this is the match!
+//            {
 //                if (maxIndex == mCategories.size()-1)   // it would be a new category
 //                    residual = mDimensions; //1.0-workingVigilance; //1.0; //mDimensions;   // new categories are too chaotic for us to privilege
 //                else
                     residual = mCategories.at(maxIndex)->GetResidual(input,mDimensions*2,1.0); //mLearnRate); // <- figure out how much residual would occur
                 chosen = true;
                 recentChoice = maxIndex;
-            }
-            else	// failed the mVigilance test.
-            {
-                choices[maxIndex] = -1; // reset, try again
-                maxIndex = -1;
-            }
+//            }
+//            else	// failed the mVigilance test.
+//            {
+//                choices[maxIndex] = -1; // reset, try again
+//                maxIndex = -1;
+//            }
         } else
             chosen = true;
     }	// otherwise look again.

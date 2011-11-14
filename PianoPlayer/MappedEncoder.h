@@ -16,7 +16,7 @@ class MappedEncoder : public SpatialEncoder
 {
 private:
     typedef std::map<int, int> myMap; 
-    myMap encoderMapping;
+    myMap* encoderMapping;
     
     int GetMapping(int inToken);
 public:
@@ -28,4 +28,6 @@ public:
     
     void AddToken(int token);
 //    void AddToken(int* tokens, int size);    // input several tokens at once
+    void Copy(MappedEncoder * that);
+    myMap* FillMapping(myMap* that);  // stick my map into that
 };

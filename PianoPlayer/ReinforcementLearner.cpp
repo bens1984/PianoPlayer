@@ -5,7 +5,7 @@
 //  Created by Ben Smith on 10/9/11.
 //  Copyright 2011 __MyCompanyName__. All rights reserved.
 //
-#define UPPERART  // define to use a wide vigilance ART at the first level in addition to the fine/narrow/high vigilance ART
+//#define UPPERART  // define to use a wide vigilance ART at the first level in addition to the fine/narrow/high vigilance ART
 //  #define UPPER_DERIVED_ART
 
 #define IMPORTANCE_FACTOR 1.0       // the exponent for the importance vs residual measure. <1 weights resonance strongly, >1 weights residual strongly
@@ -21,7 +21,7 @@
 ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/(double)FEATURE_SIZE), recencyTotal(0.0), useRecency(false), prevFitVector(0x00), prevFitVectorSize(0), fitVectorDistances(0x00) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
     pitchArt = new ART(0, 0.1, 0.925);    // params: choice, learning rate, vigilance
-    intervalArt = new ART(0, 0.1, 0.9);
+    intervalArt = new ART(0, 0.1, 0.925);
     othersArt = new ART(0, 0.5, 0.925);
     bigArt = new ART(0, 0.5, 0.75);
     secondArt = new ART(0, 0.9, 0.9);
@@ -32,24 +32,24 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
 //    myArt->AddResonanceGroup(48, 5, 3.0);   // tell it about the "others" group - octave number (pitch / 12)
     
     pitchEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
-    pitchEncoder->SetDecayAmount(0.1);
+    pitchEncoder->SetDecayAmount(0.2);
     tonalityEncoder = new TonalityEncoder(12); //, 0.025);
     intervalEncoder = new SpatialEncoder(23);   // 11 down, unison, 11 up intervals
     intervalClassEncoder = new TonalityEncoder(7);        // for encoding intervals - 7 ICs followed by 
-    intervalEncoder->SetDecayAmount(0.1);
+    intervalEncoder->SetDecayAmount(0.2);
     othersEncoder = new SpatialEncoder(11);          // for other measures of the token sequence
     othersEncoder->SetDecayAmount(0.4);
     
-    tempEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
-    tempTonalityEncoder = new TonalityEncoder(12); //, 0.025);    // for pitch classes as a tonality measure
-    tempIntervalEncoder = new SpatialEncoder(23);
-    tempIntervalEncoder->SetDecayAmount(0.1);
-    tempIntervalClassEncoder = new TonalityEncoder(7);        // for encoding intervals
-    tempOtherEncoder = new SpatialEncoder(11);          // for other measures of the token sequence
-    tempOtherEncoder->SetDecayAmount(0.4);
+//    tempEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
+//    tempTonalityEncoder = new TonalityEncoder(12); //, 0.025);    // for pitch classes as a tonality measure
+//    tempIntervalEncoder = new SpatialEncoder(23);
+//    tempIntervalEncoder->SetDecayAmount(0.1);
+//    tempIntervalClassEncoder = new TonalityEncoder(7);        // for encoding intervals
+//    tempOtherEncoder = new SpatialEncoder(11);          // for other measures of the token sequence
+//    tempOtherEncoder->SetDecayAmount(0.4);
     
     thirdSTM = new MappedEncoder();
-    tempThirdSTM = new MappedEncoder();
+//    tempThirdSTM = new MappedEncoder();
 //    thirdSTM->SetDecayAmount(0.8);
     
 #if defined UPPERART || defined UPPER_DERIVED_ART
@@ -57,12 +57,12 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
     upperEncoder->SetDecayAmount(0.8);
     upperArt = new ART(0, 0.2, 0.9);
 #endif
-    thirdArt = new ART(0, 1.0, 0.7);
+    thirdArt = new ART(0, 0.1, 0.95);
     
     distanceEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//SampledEncoder(8); //new WaveletEncoder(4);
-    tempDistanceEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//new SampledEncoder(8); //new WaveletEncoder(4);
+//    tempDistanceEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//new SampledEncoder(8); //new WaveletEncoder(4);
     curvatureEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//new SampledEncoder(8); //new WaveletEncoder(4);
-    tempCurvatureEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//SampledEncoder(8); //new WaveletEncoder(4);
+//    tempCurvatureEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//SampledEncoder(8); //new WaveletEncoder(4);
     derivedArt = new ART(0, 0.9, 0.95);
     
 //    featureVector = (double*)malloc(sizeof(double)*FEATURE_SIZE); //new double(27);
@@ -81,20 +81,20 @@ ReinforcementLearner::~ReinforcementLearner()
     delete intervalEncoder;
     delete intervalClassEncoder;
     delete othersEncoder;
-    delete tempEncoder;
-    delete tempTonalityEncoder;
-    delete tempIntervalEncoder;
-    delete tempIntervalClassEncoder;
-    delete tempOtherEncoder;
+//    delete tempEncoder;
+//    delete tempTonalityEncoder;
+//    delete tempIntervalEncoder;
+//    delete tempIntervalClassEncoder;
+//    delete tempOtherEncoder;
     delete upperEncoder;
     delete upperArt;
     delete thirdSTM;
-    delete tempThirdSTM;
+//    delete tempThirdSTM;
     delete thirdArt;
     delete distanceEncoder;
-    delete tempDistanceEncoder;
+//    delete tempDistanceEncoder;
     delete curvatureEncoder;
-    delete tempCurvatureEncoder;
+//    delete tempCurvatureEncoder;
     delete derivedArt;
     if (importance != 0x00)
         delete importance;
@@ -127,12 +127,7 @@ double ReinforcementLearner::DoFirstLevelDistance(bool retain, int &categoryID, 
     bigArt->ProcessNewObservation(featureVector, FEATURE_SIZE);
     const double* fit = bigArt->GetCategoryChoice();
     int fitSize = bigArt->GetCategoryCount();
-//    double distance = 
-    CalcFitVectorDistance(fit);
-//    if (retain) 
-//        distanceEncoder->DoEncoding(distance);
-//    else
-//        tempDistanceEncoder->DoEncoding(distance);
+    
     if (retain && prevFitVectorSize != fitSize)
     {
         if (prevFitVector != 0x00)
@@ -143,6 +138,9 @@ double ReinforcementLearner::DoFirstLevelDistance(bool retain, int &categoryID, 
         fitVectorDistances = (double*)malloc(fitSize*sizeof(double));
         prevFitVectorSize = fitSize;
     }
+//    double distance = 
+    CalcFitVectorDistance(fit);
+    
     double ret = bigArt->GetImportanceSum();
     if (retain)
     {
@@ -181,9 +179,11 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
         othersEncoder->DoEncoding(&others[0], 2);
     }
     double * featureVector = (double*)malloc(FEATURE_SIZE*8);
+    for (int i = 0; i < FEATURE_SIZE; i++)
+        featureVector[i] = 0.0;
     memcpy(featureVector, pitchEncoder->GetEncoding(), 96); //12*sizeof(double)); //12*8);
 //    memcpy(featureVector+12, tonalityEncoder->GetEncoding(), 96);
-    memcpy(featureVector+24, intervalClassEncoder->GetEncoding(), 56);
+//    memcpy(featureVector+24, intervalClassEncoder->GetEncoding(), 56);
     memcpy(featureVector+31, intervalEncoder->GetEncoding(), 184); //30*sizeof(double));
     memcpy(featureVector+54, othersEncoder->GetEncoding(), 88); //11*sizeof(double));
 //    featureVector[57] = (abs(interval) > 11);
@@ -248,14 +248,16 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
     secondArt->ProcessNewObservation(prevFitVector, prevFitVectorSize);
     secondArt->makeChoice();
     
-    thirdSTM->DoEncoding(secondArt->GetChosenCategoryID());
+    others[0] = pitchArt->GetChosenCategoryID();
+    others[1] = intervalArt->GetChosenCategoryID() << 16;
+    thirdSTM->DoEncoding(&others[0], 2); //secondArt->GetChosenCategoryID());
     thirdArt->ProcessNewObservation(thirdSTM->GetEncoding(), thirdSTM->GetDimensions());
     fitVector = thirdArt->GetCategoryChoice();
     double thirdImportSum = thirdArt->GetImportanceSum();
     rewards[3] = thirdImportSum;
     
 //    OSCSend::getSingleton()->oscSend("/3rdSTM", thirdSTM->GetDimensions(), thirdSTM->GetEncoding());
-//    OSCSend::getSingleton()->oscSend("/3rd", thirdArt->GetCategoryCount(), fitVector);
+    OSCSend::getSingleton()->oscSend("/3rd", thirdArt->GetCategoryCount(), fitVector);
 //    thirdArt->ProcessNewObservation(fitVector, fitSize);
     thirdArt->makeChoice();
     
@@ -269,16 +271,16 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs)  // this is t
 }
 int ReinforcementLearner::PredictMaximalInput()      // look one step ahead and calculate what input value would be most rewarding
 {
-    double* reward = (double*)malloc(48*8); //[48]; //, rewardLR[12];      // hold the potential reward for each of our proposals
+    __block double* reward = (double*)malloc(48*8); //[48]; //, rewardLR[12];      // hold the potential reward for each of our proposals
+//    dispatch_apply(48, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t i){ reward[i] = 0; reward[i] = CalcPredictedReward(i+36);});
     
-    dispatch_apply(48, dispatch_get_global_queue(0, 0), ^(size_t i){reward[i] = CalcPredictedReward(i+36);});
-    
-//    for (int i = 0; i < 48; i++)    // try each of the pitches
-//    {
-//        reward[i] = CalcPredictedReward(i+36);
-//        //            cout << "predict cat " << cat << " produces " << res << ", reward: " << reward[i] << endl;
-//        //            rewardLR[i] = (1.0-importSum) * myArt->GetResidualLR();
-//    }
+//    dispatch_queue_t queue = dispatch_queue_create("com.app.task",NULL);
+    for (int i = 0; i < 48; i++)    // try each of the pitches
+    {
+        reward[i] = CalcPredictedReward(i+36);
+        //            cout << "predict cat " << cat << " produces " << res << ", reward: " << reward[i] << endl;
+        //            rewardLR[i] = (1.0-importSum) * myArt->GetResidualLR();
+    }
     OSCSend::getSingleton()->oscSend("/predictReward", 48, &reward[0]);
 //    OSCSend::getSingleton()->oscSend("/recency", recency.size(), &recency[0]);
     double max = -1;
@@ -291,6 +293,9 @@ int ReinforcementLearner::PredictMaximalInput()      // look one step ahead and 
             maxInput = i;
         }
     }
+    
+    delete reward;
+    
     return maxInput + 36;
 }
 double ReinforcementLearner::CalcPredictedReward(int test, double* rewards)
@@ -298,13 +303,21 @@ double ReinforcementLearner::CalcPredictedReward(int test, double* rewards)
     int others[3];
     int pitchClass = test % 12;
     
-    tempEncoder->Copy(pitchEncoder);    // copy the 'real' encoder's state
-    tempEncoder->DoEncoding(pitchClass);        // add the proposed input
-    tempTonalityEncoder->Copy(tonalityEncoder);
-    tempTonalityEncoder->DoEncoding(pitchClass);
+    double featureVector[FEATURE_SIZE]; // = (double*)malloc(FEATURE_SIZE*8);
+    for (int i = 0; i < FEATURE_SIZE; i++)
+        featureVector[i] = 0.0;
     
-    tempIntervalEncoder->Copy(intervalEncoder);
-    tempIntervalClassEncoder->Copy(intervalClassEncoder);
+    SpatialEncoder tempEncoder(12);
+    tempEncoder.Copy(pitchEncoder);    // copy the 'real' encoder's state
+    tempEncoder.DoEncoding(pitchClass);        // add the proposed input
+    TonalityEncoder tempTonalityEncoder(12);
+    tempTonalityEncoder.Copy(tonalityEncoder);
+    tempTonalityEncoder.DoEncoding(pitchClass);
+    
+    SpatialEncoder tempIntervalEncoder(23);
+    tempIntervalEncoder.Copy(intervalEncoder);
+    TonalityEncoder tempIntervalClassEncoder(7);
+    tempIntervalClassEncoder.Copy(intervalClassEncoder);
     int interval = 0;
     if (prevObs != -1) {
         interval = test-prevObs;
@@ -313,24 +326,24 @@ double ReinforcementLearner::CalcPredictedReward(int test, double* rewards)
             IC = 12-IC;
     //    others[0] = IC;
     //    others[1] = (int)((interval / 12.0 - interval / 12) * 12.0) + 18; //11 + 7;   // 11 for the negative(down) intervals and 7 for the ICs
-        tempIntervalEncoder->DoEncoding((int)((interval / 12.0 - interval / 12) * 12.0) + 11); //&others[0], 2);
-        tempIntervalClassEncoder->DoEncoding(IC);
+        tempIntervalEncoder.DoEncoding((int)((interval / 12.0 - interval / 12) * 12.0) + 11); //&others[0], 2);
+        tempIntervalClassEncoder.DoEncoding(IC);
     //    tempIntEncoder->DoEncoding(&others[0], 2);
         
-        tempOtherEncoder->Copy(othersEncoder);
+        SpatialEncoder tempOtherEncoder(11);
+        tempOtherEncoder.Copy(othersEncoder);
         others[0] = (test > prevObs ? 2 : (test < prevObs ? 0 : 1));
         others[1] = (abs(test-prevObs) / 12) + 3;
         if (others[1] > 5) others[1] = 5;   // don't index beyond end of othersEncoder
     //    others[2] = ((test-36) / 12) + 6;    // which octave + index into othersEncoder
-        tempOtherEncoder->DoEncoding(&others[0], 2);
+        tempOtherEncoder.DoEncoding(&others[0], 2);
+        memcpy(&featureVector[54], tempOtherEncoder.GetEncoding(), 88); //11*8);
     }
 
-    double * featureVector = (double*)malloc(FEATURE_SIZE*8);
-    memcpy(featureVector, tempEncoder->GetEncoding(), 96); //12*8);
-//    memcpy(featureVector+12, tempTonalityEncoder->GetEncoding(), 96); //12*8);
-    memcpy(featureVector+24, tempIntervalClassEncoder->GetEncoding(), 56); //7*8);
-    memcpy(featureVector+31, tempIntervalEncoder->GetEncoding(), 184);
-    memcpy(featureVector+54, tempOtherEncoder->GetEncoding(), 88); //11*8);
+    memcpy(&featureVector, tempEncoder.GetEncoding(), 96); //12*8);
+//    memcpy(featureVector+12, tempTonalityEncoder.GetEncoding(), 96); //12*8);
+//    memcpy(featureVector+24, tempIntervalClassEncoder.GetEncoding(), 56); //7*8);
+    memcpy(&featureVector[31], tempIntervalEncoder.GetEncoding(), 184);
 //    featureVector[57] = (abs(interval) > 11);
 //    featureVector[58] = (abs(interval) > 23);
 //    featureVector[59] = (test-36) / 48.0;
@@ -347,9 +360,10 @@ double ReinforcementLearner::CalcPredictedReward(int test, double* rewards)
 //    othersArt->ProcessNewObservation(&featureVector[54], 11);
 //    fitVector = pitchArt->GetCategoryChoice();                         // get the resonance of each category
 //    int fitVectorSize = myArt->GetCategoryCount();
-    tempDistanceEncoder->Copy(distanceEncoder);
+    FeatureDistanceEncoder tempDistanceEncoder(FEATURE_SIZE);
+    tempDistanceEncoder.Copy(distanceEncoder);
 //    tempDistanceEncoder->DoEncoding(featureVector, FEATURE_SIZE);
-    tempDistanceEncoder->DoEncoding(prevFitVector, prevFitVectorSize);
+    tempDistanceEncoder.DoEncoding(prevFitVector, prevFitVectorSize);
     
     double pitchImport, intervalImport, othersImport;
     int cat;
@@ -376,7 +390,7 @@ double ReinforcementLearner::CalcPredictedReward(int test, double* rewards)
 //    cat += intervalArt->PredictChoice() << 8;
 //    cat += othersArt->PredictChoice();
     
-    derivedArt->ProcessNewObservation(tempDistanceEncoder->GetEncoding(), tempDistanceEncoder->GetDimensions());
+    derivedArt->ProcessNewObservation(tempDistanceEncoder.GetEncoding(), tempDistanceEncoder.GetDimensions());
     double derivedImport = derivedArt->GetImportanceSum();
     if (rewards != 0x00) {
         OSCSend::getSingleton()->oscSend("/distance", distanceEncoder->GetDimensions(), distanceEncoder->GetEncoding());
@@ -398,9 +412,12 @@ double ReinforcementLearner::CalcPredictedReward(int test, double* rewards)
     secondArt->ProcessNewObservation(prevFitVector, prevFitVectorSize);
     double secondImport = secondArt->PredictChoice(); //secondArt->GetImportanceSum();
     
-    tempThirdSTM->Copy(thirdSTM);
-    tempThirdSTM->DoEncoding(secondArt->GetChosenCategoryID());
-    thirdArt->ProcessNewObservation(tempThirdSTM->GetEncoding(), tempThirdSTM->GetDimensions());
+    MappedEncoder tempThirdSTM;
+    tempThirdSTM.Copy(thirdSTM);
+    others[0] = pitchArt->GetChosenCategoryID();
+    others[1] = intervalArt->GetChosenCategoryID() << 16;
+    tempThirdSTM.DoEncoding(&others[0], 2); //secondArt->GetChosenCategoryID());
+    thirdArt->ProcessNewObservation(tempThirdSTM.GetEncoding(), tempThirdSTM.GetDimensions());
     double thirdImportSum; // = thirdArt->GetImportanceSum();   // must be called before make/predictChoice as those function destroy the choice vector
     thirdImportSum = thirdArt->PredictChoice();
     if (rewards != 0x00) {
@@ -430,19 +447,20 @@ double ReinforcementLearner::CalcPredictedReward(int test, double* rewards)
     double thirdRes = thirdArt->GetResidual();
     if (rewards != 0x00)
         rewards[10] = thirdRes;
-    thirdRes = (thirdRes > MAXIMAL_RESIDUAL);
+    thirdRes = (thirdRes > 0.001 && thirdRes < 0.1);
 //    if (thirdRes > 0)
 //        thirdRes = 0.005 / thirdRes;
 //    thirdRes = (thirdRes > 1 ? 1.0 / thirdRes : thirdRes);
-    intervalImport = pow(intervalImport, 2.0) * pow(pitchImport, 2.0);
+    intervalImport = pow(intervalImport, 1.0); // + pow(pitchImport, 2.0);
     
-    delete featureVector;
+//    delete featureVector;
     
-    return (intervalArt->GetResidual() > MAXIMAL_RESIDUAL) * intervalImport + (pitchArt->GetResidual() > MAXIMAL_RESIDUAL) * intervalImport
+    return (intervalArt->GetResidual() > MAXIMAL_RESIDUAL) * intervalImport + (pitchArt->GetResidual() > MAXIMAL_RESIDUAL) * pitchImport
+//    return (1.0 - intervalArt->GetResidual()) * intervalImport + (1.0 - pitchArt->GetResidual()) * pow(pitchImport, 0.5)
 //    return ((pitchArt->GetResidual() > 0.01) * pitchImport * 0.3 + (intervalArt->GetResidual() > 0.001) * intervalImport * 25.0 +
 //            (othersArt->GetResidual() > 0.01) * othersImport * 0.1 +
 //           + bigRes * pow(bigImport, 1.0) 
-//        + thirdRes * pow(thirdImportSum, 3) * 0.66
+        + thirdRes * thirdImportSum * 2.0
 //            + (secondArt->GetResidual() > MAXIMAL_RESIDUAL) * secondImport // + derivedImport * 1.0
 #ifdef UPPERART
 //        + upperImport * (upperArt->GetResidual() > 0.03)) * 0.13

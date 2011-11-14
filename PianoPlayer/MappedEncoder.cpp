@@ -8,18 +8,20 @@
 
 #include "MappedEncoder.h"
 MappedEncoder::MappedEncoder() : SpatialEncoder(0, true) {
-    
+    encoderMapping = new myMap;
 }
 MappedEncoder::~MappedEncoder() {
-    encoderMapping.clear();
+//    encoderMapping->clear();
+    if (!copy)
+        delete encoderMapping;
 }
 
 int MappedEncoder::GetMapping(int inToken)
 {
-    myMap::iterator it = encoderMapping.find(inToken);
-    if (it == encoderMapping.end())
+    myMap::iterator it = encoderMapping->find(inToken);
+    if (it == encoderMapping->end())
     {
-        encoderMapping.insert(std::pair<int, int>(inToken, dimensions));
+        encoderMapping->insert(std::pair<int, int>(inToken, dimensions));
         return dimensions;
     } else
         return it->second;
@@ -43,3 +45,14 @@ void MappedEncoder::AddToken(int token) {
 //void MappedEncoder::AddToken(int* tokens, int size) {    // input several tokens at once
 //
 //}
+void MappedEncoder::Copy(MappedEncoder * that)
+{
+    SpatialEncoder::Copy(that);
+    delete encoderMapping;  // get rid of our old map
+    encoderMapping = that->FillMapping(encoderMapping);  // get a new map!
+    copy = true;    // do not want to delete encoderMapping because we're now using that's mapping
+}
+
+map<int,int>* MappedEncoder::FillMapping(myMap* that) {
+    return encoderMapping; //new myMap(*encoderMapping); //->begin(), encoderMapping->end());
+}

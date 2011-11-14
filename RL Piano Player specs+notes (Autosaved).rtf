@@ -2,7 +2,7 @@
 {\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Menlo-Regular;}
 {\colortbl;\red255\green255\blue255;\red46\green13\blue110;\red63\green110\blue116;\red38\green71\blue75;
 \red28\green0\blue207;\red100\green56\blue32;}
-\margl1440\margr1440\vieww11200\viewh17280\viewkind0
+\margl1440\margr1440\vieww11120\viewh12060\viewkind0
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
 
 \f0\fs24 \cf0 Specs for Reinforcement Learner\
@@ -139,4 +139,30 @@ From handwritten notes:\
 	Any given feature will be explored in a continuous fashion, aiming for all possibilities. Derived features are necessary here to guide that exploration and reward internal cohesion with variation, rather than "random" (to us) wandering. For example, simply giving the RL 12 pitch classes will result in all tone rows and sub-rows eventually, but without any progression. Interval Classes aids this, encouraging exploration of interval relationships too.\
 	How can we model changes between categories? I can watch the resonance vectors and categorize those, but that doesn't give transitions. I can make an STM of the category IDs, but that loses closely related categories and is thus very finicky. Is the distance between successive resonance vectors significant? Perhaps feed that category ID into an STM and learn that!\
 		first order categorization of everything -> measure distance between resonance vectors -> categorize this -> feed this ID into a spatial encoder -> categorize this STM -> and watch for reward here!\
-	In code: bigArt for everything -> distances in vectors -> upperArt watches distance, learns -> category ID is fed into thirdSTM}
+	In code: bigArt for everything -> distances in vectors -> upperArt watches distance, learns -> category ID is fed into thirdSTM\
+\
+11/2/2011\
+\
+	We have these complex feature vectors now, perhaps too rich. For example: most recent PC and the interval vector serves to recover the previous material. Characterizing repetitions in that sequence. Better tonality representation (keep vector at 1s, then *0.5 for every occurrence of a pitch? Decay by adding 0.15 or so)\
+\
+11/3/2011\
+	settings at 0.6 LR, 0.925 Vig on most, 0.4 LR on others, 0.5, 0.8 on big, 0.5, 0.925 on third & derived\
+\
+11/4/2011\
+	set the "distance" watcher to watch the amount of movement in the resonance vector of the "bigART"(watches all of the first level (L1) feature vectors combined). It now has a very interesting curve while following the Bach Cello suite1 prelude. I have it watching the distance between input at t and t-1, t and an average of 2, average of 4, and average of 8 (low pass filter). This should catch rapid alternations vs steady movement in a direction. Curvature should help this too.\
+\
+11/8/2011\
+\
+	rewinding the progress of reward functions to try and understand it piece by piece.\
+	First: going for a flat rate reward for learning residual. If it's measurable then we call it good, otherwise it's boring. Then we measure chaotic inputs by how much resonance the input generates, setting some sort of threshold for this measure. Things that are deemed really chaotic shouldn't be learned at all, or marked as a category that is unintelligible to the agent (i.e. "I heard this word but I don't know what it means and I can barely remember it").\
+	I could block the vigilance check when predicting (calculating reward for a given input). Distant inputs then train new categories which will always have a residual equal to the number of dimensions (or be locked to some constant). Their resonance will be good still.\
+\
+	BECAUSE import is currently calculated as the sum of all the resonances it will always try to build uniformly around what it knows. But maybe we want it to be willing to wander in a direction, mapping a more uneven shape in the feature space.\
+	TRYING: just looking at the residual, rewarding if it is in a specific band, otherwise it is chaotic or boring. Block vigilance check on prediction, if something is close and trains a new category that is good, if we allow vigilance checks it will create a new category which has a high residual by default, and would always be unrewarding (I will try with vigilance checks on as a second step, to see if it still creates categories accidentally, or as a result of another ART voting high).\
+	Keep vig on, just look at residual and resonance with chosen match (ignore the rest of the field). This will allow it to wander off in a direction. Still need to ensure that repetitions are encouraged, that creating new categories is relatively discouraged (but allowed), \
+\
+11/14/2011\
+\
+	Calculating Import based on the best match, without a vigilance check, is promising thus far. It still has patterns I can hear (and like), but is not as thorough and mundane in its movement. I'm using a switched residual: either it's over a given a threshold and thus potentially interesting, or else it is boring. Residual * Importance is the reward (adding the different ART outputs together).\
+	Now I'm thinking about how to give it an idea of phrasing, of rhythm (which should aid phrasing), and of greater directionality (direction over several notes - maybe an average?). Do we hear phrases as ascending/descending in a binary fashion, or does the degree of ascending/descending matter much? Surely there must be cases where the degree of ascension is important.\
+	How can a phrase shape (continuous over a number of notes) be encoded into an ART readable/comparable form? Is it already being taken care of?}

@@ -10,7 +10,8 @@
 #include "SpatialEncoder.h"
 #include <string.h>
 
-SpatialEncoder::SpatialEncoder(int tokenCount, bool dynamic) : dimensions(tokenCount), myDecay(LinearDecay), decayAmount(ENCODER_DECAY_RATE), dynamicGrow(dynamic)
+SpatialEncoder::SpatialEncoder(int tokenCount, bool dynamic) : dimensions(tokenCount), myDecay(LinearDecay), decayAmount(ENCODER_DECAY_RATE), 
+    dynamicGrow(dynamic), copy(false)
 {
     if (dimensions == 0)
         dimensions = 2;
@@ -111,6 +112,7 @@ void SpatialEncoder::SetDecayModel(DecayModel model)
 }
 
 void SpatialEncoder::Copy(SpatialEncoder* that) {
+    copy = true;
     if (dimensions != that->GetDimensions()) {
         delete myEncoder;   // clean up old encoder space
         dimensions = that->GetDimensions();

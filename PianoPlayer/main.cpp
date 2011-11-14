@@ -66,7 +66,8 @@ int main (int argc, const char * argv[])
                     cout << "Switching to predictive mode." << endl;
             }
             delete data;
-        }
+        } else
+            usleep(10);
     }    
 //    double* input = new double[6];
 //    for (int i = 0; i < 25; i++)

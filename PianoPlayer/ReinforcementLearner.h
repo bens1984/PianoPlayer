@@ -52,22 +52,32 @@
 class ReinforcementLearner
 {
 private:
-    __block SpatialEncoder *pitchEncoder, *intervalEncoder, *othersEncoder;
-    __block TonalityEncoder *tonalityEncoder, *intervalClassEncoder;
-    __block ART *pitchArt, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
-    __block FeatureDistanceEncoder *distanceEncoder, *curvatureEncoder;
-    __block MappedEncoder   *upperEncoder;
-    TonalityEncoder *tempTonalityEncoder, *tempIntervalClassEncoder;
-    SpatialEncoder *tempEncoder, *tempIntervalEncoder, *tempOtherEncoder;
-    FeatureDistanceEncoder *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
+    //__block 
+    SpatialEncoder *pitchEncoder, *intervalEncoder, *othersEncoder;
+    //__block 
+    TonalityEncoder *tonalityEncoder, *intervalClassEncoder;
+    //__block 
+    ART *pitchArt, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
+    //__block 
+    FeatureDistanceEncoder *distanceEncoder, *curvatureEncoder;
+    //__block 
+    MappedEncoder   *upperEncoder;
+//    TonalityEncoder *tempTonalityEncoder, *tempIntervalClassEncoder;
+//    SpatialEncoder *tempEncoder, *tempIntervalEncoder, *tempOtherEncoder;
+//    FeatureDistanceEncoder *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
     MappedEncoder *tempUpperEncoder;
-    __block ART *upperArt, *secondArt;  // an "upper level" ART to watch the transitions between myArt's categories, and a "secondary" ART to watch BIG ART's resonances
-    __block ART *bigArt;    // a first level ART to watch all of the features together
-    __block ART *thirdArt;  // watches resonances of lower ARTs
-    __block MappedEncoder *thirdSTM;
-    MappedEncoder *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch
+    //__block 
+    ART *upperArt, *secondArt;  // an "upper level" ART to watch the transitions between myArt's categories, and a "secondary" ART to watch BIG ART's resonances
+    //__block 
+    ART *bigArt;    // a first level ART to watch all of the features together
+    //__block 
+    ART *thirdArt;  // watches resonances of lower ARTs
+    //__block 
+    MappedEncoder *thirdSTM;
+//    MappedEncoder *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch
 //    double * featureVector;
-    __block double *prevFeatureVector;
+    //__block 
+    double *prevFeatureVector;
     double occurrencesTotal, recencyTotal; // how much total resonance we have observed from the ART, size of recency vector
     vector<double> occurrences;    // how much resonance has been observed for each category
     vector<double> recency;         // a decaying sum of observed resonance for each category
@@ -75,12 +85,12 @@ private:
 //    double mChoice, mLearnRate, mVigilance;	// store for reset
     // outputs from processing in the ART
     const double *fitVector;
-    __block double *prevFitVector, *fitVectorDistances;
-    __block int prevFitVectorSize;
-    __block double *importance;
-    __block int chosenCategory;
-    __block double distance;
-    __block int prevObs;    // previous pitch input
+    double *prevFitVector, *fitVectorDistances;
+    int prevFitVectorSize;
+    double *importance;
+    int chosenCategory;
+    double distance;
+    int prevObs;    // previous pitch input
     double mySponteneity;
     bool    useRecency;     // do we weight resonance by a measure of recency?
 private:

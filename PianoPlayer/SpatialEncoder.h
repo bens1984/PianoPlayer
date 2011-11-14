@@ -26,6 +26,7 @@ protected:
     DecayModel  myDecay;
     double      decayAmount;
     double*     myEncoder;
+    bool        copy;
 private:
     bool        dynamicGrow;    // allow the size of the STM to grow if new tokens are input?
 public:
