@@ -20,7 +20,7 @@
 
 ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), mySponteneity(NEW_THRESHOLD/(double)FEATURE_SIZE), recencyTotal(0.0), useRecency(false), prevFitVector(0x00), prevFitVectorSize(0), fitVectorDistances(0x00) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    pitchArt = new ART(0, 0.01, 0.925);    // params: choice, learning rate, vigilance
+    pitchArt = new ART(0, 0.1, 0.925);    // params: choice, learning rate, vigilance
     intervalArt = new ART(0, 0.01, 0.925);
     othersArt = new ART(0, 0.5, 0.925);
     bigArt = new ART(0, 0.75, 0.7);
@@ -58,7 +58,7 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
     upperEncoder->SetDecayAmount(0.8);
     upperArt = new ART(0, 0.2, 0.9);
 #endif
-    thirdArt = new ART(0, 0.1, 0.85);
+    thirdArt = new ART(0, 0.05, 0.75);
     
     distanceEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//SampledEncoder(8); //new WaveletEncoder(4);
 //    tempDistanceEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//new SampledEncoder(8); //new WaveletEncoder(4);
@@ -433,12 +433,16 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
         rewards[6] = pitchArt->GetResidual();
 //        rewards[7] = intervalArt->GetResidual();
 //        rewards[8] = othersArt->GetResidual();
-        res = (rewards[6] + rewards[7] + (rewards[8] * 0.25));
-        res = (res > MAXIMAL_RESIDUAL);
+//        res = (rewards[6] + rewards[7] + (rewards[8] * 0.25));
+//        res = (res > MAXIMAL_RESIDUAL);
     } else {
-        res = (pitchArt->GetResidual() + intervalArt->GetResidual() + othersArt->GetResidual());
-        res = (res > MAXIMAL_RESIDUAL);
+        res = (pitchArt->GetResidual()); // + intervalArt->GetResidual() + othersArt->GetResidual());
+//        res = (res > MAXIMAL_RESIDUAL);
     }
+    if (res > 0)
+        res = MAXIMAL_RESIDUAL / res;
+    if (res > 1)
+        res = 0;
     double bigRes = bigArt->GetResidual();
     if (rewards != 0x00)
         rewards[9] = bigRes;
@@ -449,7 +453,11 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
     double thirdRes = thirdArt->GetResidual();
     if (rewards != 0x00)
         rewards[10] = thirdRes;
-    thirdRes = (thirdRes > MAXIMAL_RESIDUAL && thirdRes < MAXIMAL_RESIDUAL * 10.0);
+    if (thirdRes > 0)
+        thirdRes = 0.01 / thirdRes;
+    if (thirdRes > 1)
+        thirdRes = 0;
+//    thirdRes = (thirdRes > MAXIMAL_RESIDUAL && thirdRes < MAXIMAL_RESIDUAL * 10.0);
 //    if (thirdRes > 0)
 //        thirdRes = 0.005 / thirdRes;
 //    thirdRes = (thirdRes > 1 ? 1.0 / thirdRes : thirdRes);
@@ -458,12 +466,12 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
 //    delete featureVector;
     
     return //(intervalArt->GetResidual() > MAXIMAL_RESIDUAL) * intervalImport * 0.5 + 
-        (pitchArt->GetResidual() > MAXIMAL_RESIDUAL) * pitchImport
+        res * 0.5 //(pitchArt->GetResidual() > MAXIMAL_RESIDUAL)
 //    return (1.0 - intervalArt->GetResidual()) * intervalImport + (1.0 - pitchArt->GetResidual()) * pow(pitchImport, 0.5)
 //    return ((pitchArt->GetResidual() > 0.01) * pitchImport * 0.3 + (intervalArt->GetResidual() > 0.001) * intervalImport * 25.0 +
 //            (othersArt->GetResidual() > 0.01) * othersImport * 0.1 +
 //           + bigRes * pow(bigImport, 1.0) 
-        + thirdRes * thirdImportSum
+        + thirdRes //* thirdImportSum
 //            + (secondArt->GetResidual() > MAXIMAL_RESIDUAL) * secondImport // + derivedImport * 1.0
 #ifdef UPPERART
 //        + upperImport * (upperArt->GetResidual() > 0.03)) * 0.13
