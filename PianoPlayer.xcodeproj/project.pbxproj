@@ -17,6 +17,7 @@
 		A00F2E0E14621C5500AFB341 /* SampledEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A00F2E0C14621C5400AFB341 /* SampledEncoder.cpp */; };
 		A04304D01459A29F00C8658A /* WaveletEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A04304CE1459A29F00C8658A /* WaveletEncoder.cpp */; };
 		A04304D41459A8BD00C8658A /* MappedEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A04304D21459A8BC00C8658A /* MappedEncoder.cpp */; };
+		A05BB0FC147230E50025AFDC /* RhythmEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A05BB0FA147230E50025AFDC /* RhythmEncoder.cpp */; };
 		A0A5093C1442AFC50055395A /* ReinforcementLearner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A5093A1442AFC50055395A /* ReinforcementLearner.cpp */; };
 		A0A509401442B44D0055395A /* artCategory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A5093E1442B44D0055395A /* artCategory.cpp */; };
 		A0A509431442BE9C0055395A /* ART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A509411442BE9C0055395A /* ART.cpp */; };
@@ -56,6 +57,8 @@
 		A04304CF1459A29F00C8658A /* WaveletEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WaveletEncoder.h; sourceTree = "<group>"; };
 		A04304D21459A8BC00C8658A /* MappedEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MappedEncoder.cpp; sourceTree = "<group>"; };
 		A04304D31459A8BD00C8658A /* MappedEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MappedEncoder.h; sourceTree = "<group>"; };
+		A05BB0FA147230E50025AFDC /* RhythmEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RhythmEncoder.cpp; sourceTree = "<group>"; };
+		A05BB0FB147230E50025AFDC /* RhythmEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RhythmEncoder.h; sourceTree = "<group>"; };
 		A0A5093A1442AFC50055395A /* ReinforcementLearner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReinforcementLearner.cpp; sourceTree = "<group>"; };
 		A0A5093B1442AFC50055395A /* ReinforcementLearner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ReinforcementLearner.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		A0A5093E1442B44D0055395A /* artCategory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = artCategory.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -104,8 +107,10 @@
 				48278496144348330039E90F /* OSCReceive.cpp */,
 				4827847B14336D260039E90F /* main.cpp */,
 				4827847D14336D260039E90F /* PianoPlayer.1 */,
-				A0A5093A1442AFC50055395A /* ReinforcementLearner.cpp */,
 				A0A5093B1442AFC50055395A /* ReinforcementLearner.h */,
+				A0A5093A1442AFC50055395A /* ReinforcementLearner.cpp */,
+				A05BB0FA147230E50025AFDC /* RhythmEncoder.cpp */,
+				A05BB0FB147230E50025AFDC /* RhythmEncoder.h */,
 				A0A5093E1442B44D0055395A /* artCategory.cpp */,
 				A0A5093F1442B44D0055395A /* artCategory.h */,
 				A0A509411442BE9C0055395A /* ART.cpp */,
@@ -188,6 +193,7 @@
 				A00F2E0A1461DCBF00AFB341 /* TonalityEncoder.cpp in Sources */,
 				A00F2E0E14621C5500AFB341 /* SampledEncoder.cpp in Sources */,
 				A0CFD6D71463049F006E09E6 /* FeatureDistanceEncoder.cpp in Sources */,
+				A05BB0FC147230E50025AFDC /* RhythmEncoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -13,7 +13,7 @@
 #define FEATURE_SIZE 65             // number of elements in the first level feature vector
 #define FEATURE_SIZE_1 0.015384615
 
-#define MAXIMAL_RESIDUAL 0.05        // if the residual = this then the reward = 1!
+#define MAXIMAL_RESIDUAL 0.01        // if the residual = this then the reward = 1!
 #define RESIDUAL_CURVE 1.0        // exponent to raise residual amount to
 
 #include "ReinforcementLearner.h"
@@ -23,7 +23,7 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
     pitchArt = new ART(0, 0.01, 0.925);    // params: choice, learning rate, vigilance
     intervalArt = new ART(0, 0.01, 0.925);
     othersArt = new ART(0, 0.5, 0.925);
-    bigArt = new ART(0, 0.5, 0.75);
+    bigArt = new ART(0, 0.75, 0.7);
     secondArt = new ART(0, 0.9, 0.9);
 //    myArt->AddResonanceGroup(0, 12, 12.0);   // tell it about the pitch group
 //    myArt->AddResonanceGroup(12, 7, 7.0);   // tell it about the interval group
@@ -32,11 +32,12 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
 //    myArt->AddResonanceGroup(48, 5, 3.0);   // tell it about the "others" group - octave number (pitch / 12)
     
     pitchEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
-    pitchEncoder->SetDecayAmount(0.2);
+    pitchEncoder->SetDecayAmount(0.4);
     tonalityEncoder = new TonalityEncoder(12); //, 0.025);
     intervalEncoder = new SpatialEncoder(23);   // 11 down, unison, 11 up intervals
+    intervalEncoder->SetDecayAmount(0.4);
     intervalClassEncoder = new TonalityEncoder(7);        // for encoding intervals - 7 ICs followed by 
-    intervalEncoder->SetDecayAmount(0.2);
+    intervalClassEncoder->SetDecayAmount(0.4);
     othersEncoder = new SpatialEncoder(11);          // for other measures of the token sequence
     othersEncoder->SetDecayAmount(0.4);
     
@@ -57,7 +58,7 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
     upperEncoder->SetDecayAmount(0.8);
     upperArt = new ART(0, 0.2, 0.9);
 #endif
-    thirdArt = new ART(0, 0.1, 0.75);
+    thirdArt = new ART(0, 0.1, 0.85);
     
     distanceEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//SampledEncoder(8); //new WaveletEncoder(4);
 //    tempDistanceEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//new SampledEncoder(8); //new WaveletEncoder(4);
@@ -196,8 +197,8 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs, const float& 
     
     prevObs = obs;
     
-    pitchArt->ProcessNewObservation(featureVector, 24);    // add it to the ART
-    intervalArt->ProcessNewObservation(&featureVector[24], 41); // 7 ICs + 23 intervals
+    pitchArt->ProcessNewObservation(featureVector, FEATURE_SIZE); //24);    // add it to the ART
+//    intervalArt->ProcessNewObservation(&featureVector[24], 41); // 7 ICs + 23 intervals
 //    othersArt->ProcessNewObservation(&featureVector[54], 11);
     
     double bigImport = rewards[5] = DoFirstLevelDistance(true, chosenCategory, featureVector);
@@ -215,8 +216,8 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs, const float& 
     //        importance = myArt->GetImportance();
     
     rewards[0] = pitchArt->GetImportanceSum();
-    rewards[1] = intervalArt->GetImportanceSum();
-    rewards[2] = othersArt->GetImportanceSum();
+//    rewards[1] = intervalArt->GetImportanceSum();
+//    rewards[2] = othersArt->GetImportanceSum();
     double importSum = (rewards[0] * rewards[1] * rewards[2]);// * 0.33334;    // GetImportanceSum must be called before makeChoice, as makeChoice is destructive to the resonance measure
     
 //    chosenCategory = pitchArt->makeChoice() << 16;	// make a choice and learn from it. This modifies the resonances, so the must be received first
@@ -249,9 +250,9 @@ double ReinforcementLearner::ProcessNewObservation(const int& obs, const float& 
     secondArt->ProcessNewObservation(prevFitVector, prevFitVectorSize);
     secondArt->makeChoice();
     
-    others[0] = pitchArt->GetChosenCategoryID();
-    others[1] = intervalArt->GetChosenCategoryID() << 16;
-    thirdSTM->DoEncoding(&others[0], 2); //secondArt->GetChosenCategoryID());
+//    others[0] = pitchArt->GetChosenCategoryID();
+//    others[1] = intervalArt->GetChosenCategoryID() << 16;
+    thirdSTM->DoEncoding(pitchArt->GetChosenCategoryID()); //&others[0], 2); //secondArt->GetChosenCategoryID());
     thirdArt->ProcessNewObservation(thirdSTM->GetEncoding(), thirdSTM->GetDimensions());
     fitVector = thirdArt->GetCategoryChoice();
     double thirdImportSum = thirdArt->GetImportanceSum();
@@ -356,7 +357,7 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
         OSCSend::getSingleton()->oscSend("/stm", FEATURE_SIZE, featureVector);
 //    CalcFeatureVectorDistance();
     
-    pitchArt->ProcessNewObservation(featureVector, 24);  // stick it in the ART and let it think about it. 
+    pitchArt->ProcessNewObservation(featureVector, FEATURE_SIZE); //24);  // stick it in the ART and let it think about it. 
     intervalArt->ProcessNewObservation(&featureVector[24], 41);
 //    othersArt->ProcessNewObservation(&featureVector[54], 11);
 //    fitVector = pitchArt->GetCategoryChoice();                         // get the resonance of each category
@@ -376,15 +377,15 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
 //        rewards[2] = othersImport = othersArt->GetImportanceSum();
         //importSum = (rewards[0] * rewards[1] * rewards[2]); // * 0.33334;
         rewards[0] = pitchImport = pitchArt->PredictChoice();
-        rewards[1] = intervalImport = intervalArt->PredictChoice();
-        rewards[2] = othersImport = othersArt->PredictChoice();
+//        rewards[1] = intervalImport = intervalArt->PredictChoice();
+//        rewards[2] = othersImport = othersArt->PredictChoice();
     } else {
 //        pitchImport = pitchArt->GetImportanceSum();
 //        intervalImport = intervalArt->GetImportanceSum();
 //        othersImport = othersArt->GetImportanceSum(); // * 0.33334;
         pitchImport = pitchArt->PredictChoice();
-        intervalImport = intervalArt->PredictChoice();
-        othersImport = othersArt->PredictChoice();
+//        intervalImport = intervalArt->PredictChoice();
+//        othersImport = othersArt->PredictChoice();
     }
         
 //    int cat = pitchArt->PredictChoice() << 16;
@@ -415,9 +416,9 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
     
     MappedEncoder tempThirdSTM;
     tempThirdSTM.Copy(thirdSTM);
-    others[0] = pitchArt->GetChosenCategoryID();
-    others[1] = intervalArt->GetChosenCategoryID() << 16;
-    tempThirdSTM.DoEncoding(&others[0], 2); //secondArt->GetChosenCategoryID());
+//    others[0] = pitchArt->GetChosenCategoryID();
+//    others[1] = intervalArt->GetChosenCategoryID() << 16;
+    tempThirdSTM.DoEncoding(pitchArt->GetChosenCategoryID()); //&others[0], 2); //secondArt->GetChosenCategoryID());
     thirdArt->ProcessNewObservation(tempThirdSTM.GetEncoding(), tempThirdSTM.GetDimensions());
     double thirdImportSum; // = thirdArt->GetImportanceSum();   // must be called before make/predictChoice as those function destroy the choice vector
     thirdImportSum = thirdArt->PredictChoice();
@@ -430,8 +431,8 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
     double res;
     if (rewards != 0x00) {
         rewards[6] = pitchArt->GetResidual();
-        rewards[7] = intervalArt->GetResidual();
-        rewards[8] = othersArt->GetResidual();
+//        rewards[7] = intervalArt->GetResidual();
+//        rewards[8] = othersArt->GetResidual();
         res = (rewards[6] + rewards[7] + (rewards[8] * 0.25));
         res = (res > MAXIMAL_RESIDUAL);
     } else {
@@ -456,7 +457,8 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
     
 //    delete featureVector;
     
-    return (intervalArt->GetResidual() > MAXIMAL_RESIDUAL) * intervalImport * 0.1 + (pitchArt->GetResidual() > MAXIMAL_RESIDUAL) * pitchImport * 0.1
+    return //(intervalArt->GetResidual() > MAXIMAL_RESIDUAL) * intervalImport * 0.5 + 
+        (pitchArt->GetResidual() > MAXIMAL_RESIDUAL) * pitchImport
 //    return (1.0 - intervalArt->GetResidual()) * intervalImport + (1.0 - pitchArt->GetResidual()) * pow(pitchImport, 0.5)
 //    return ((pitchArt->GetResidual() > 0.01) * pitchImport * 0.3 + (intervalArt->GetResidual() > 0.001) * intervalImport * 25.0 +
 //            (othersArt->GetResidual() > 0.01) * othersImport * 0.1 +
