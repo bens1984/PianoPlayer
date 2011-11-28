@@ -44,36 +44,41 @@
 #include "TonalityEncoder.h"
 #include "SampledEncoder.h"
 #include "FeatureDistanceEncoder.h"
+#include "WindowEncoder.h"
 
 #include "OSCSend.h"
 
-#define NEW_THRESHOLD 0.0001          // how mush residual a new category creation is "worth". When the predictor can't find
+//#define NEW_THRESHOLD 0.0001          // how mush residual a new category creation is "worth". When the predictor can't find
                                     // a known category with this much residual it will then consider creating new categories
 class ReinforcementLearner
 {
 private:
-    //__block 
     SpatialEncoder *pitchEncoder, *intervalEncoder, *othersEncoder;
+    WindowEncoder* shapeEncoder;
+    ART *L1Art; //, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
+    
+    MappedEncoder *L2STM;
+    ART *L2Art;                 // L2 - trains on ID sequence of L1 categories
+    MappedEncoder *L3STM;
+    ART *L3Art;                 // L3 - trains on ID sequence of L2 categories
+
+//    TonalityEncoder *tonalityEncoder, *intervalClassEncoder;
+//    SampledEncoder *distanceEncoder, *L2DistEncoder; //, *curvatureEncoder;
+    WindowEncoder *distCurvEncoder, *L2DistCurvEncoder;
+    ART *L1DistanceArt, *L2DistanceArt;
     //__block 
-    TonalityEncoder *tonalityEncoder, *intervalClassEncoder;
-    //__block 
-    ART *pitchArt, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
-    //__block 
-    FeatureDistanceEncoder *distanceEncoder, *curvatureEncoder;
-    //__block 
-    MappedEncoder   *upperEncoder;
+//    MappedEncoder   *upperEncoder;
 //    TonalityEncoder *tempTonalityEncoder, *tempIntervalClassEncoder;
 //    SpatialEncoder *tempEncoder, *tempIntervalEncoder, *tempOtherEncoder;
 //    FeatureDistanceEncoder *tempDistanceEncoder, *tempCurvatureEncoder;     // for the derivedART input
-    MappedEncoder *tempUpperEncoder;
+//    MappedEncoder *tempUpperEncoder;
     //__block 
-    ART *upperArt, *secondArt;  // an "upper level" ART to watch the transitions between myArt's categories, and a "secondary" ART to watch BIG ART's resonances
+//    ART *upperArt, *secondArt;  // an "upper level" ART to watch the transitions between myArt's categories, and a "secondary" ART to watch BIG ART's resonances
+//    //__block 
+//    ART *bigArt;    // a first level ART to watch all of the features together
+//    //__block 
+//    ART *thirdArt;  // watches resonances of lower ARTs
     //__block 
-    ART *bigArt;    // a first level ART to watch all of the features together
-    //__block 
-    ART *thirdArt;  // watches resonances of lower ARTs
-    //__block 
-    MappedEncoder *thirdSTM;
 //    MappedEncoder *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch
 //    double * featureVector;
     //__block 
@@ -90,13 +95,14 @@ private:
     double *importance;
     int chosenCategory;
     double distance;
-    int prevObs;    // previous pitch input
+    int prevObs, prevL1cat, prevL2cat;    // previous inputs
     double mySponteneity;
     bool    useRecency;     // do we weight resonance by a measure of recency?
 private:
-    void CalcFeatureVectorDistance(const double * featureVector);
+//    void CalcFeatureVectorDistance(const double * featureVector);
     double CalcFitVectorDistance(const double* fit);   // distance between prevFitVector and fitVector
     double DoFirstLevelDistance(bool retain, int &categoryID, const double * featureVector);     // get the distance between first level resonance vectors and learn on it, returns importanceSum
+    double CalcReward(double* rewards = 0x00);
 public:
     ReinforcementLearner();
     ~ReinforcementLearner();
@@ -104,7 +110,7 @@ public:
     double ProcessNewObservation(const int& obs, const float& duration);  // this is the next pitch that is observed
     
     int PredictMaximalInput();      // look one step ahead and calculate what input value would be most rewarding
-    double CalcPredictedReward(int test, const float& duration, double* rewards = 0x00);
+    double CalcPredictedReward(int test, const float& duration, bool learn, double* rewards = 0x00);
     
     // ------- Accessors ----------
     const double *GetFitVector()
@@ -121,7 +127,7 @@ public:
     }
     double GetDistance()
     {
-        return pitchArt->calcDistance(chosenCategory);
+        return L1Art->calcDistance(chosenCategory);
     }
     void SetSponteneity(double s)
     {
@@ -131,4 +137,7 @@ public:
     {
         useRecency = b;
     }
+    
+    void Save(string filename);
+    void Load(string filename);
 };

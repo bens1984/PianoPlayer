@@ -26,7 +26,9 @@ private:
     double* weighting;
     int dimensions;
     double sum;
+    double magnitude;
     
+    double GetMagnitude();
 public:
     ArtCategory(int dim);
     ~ArtCategory();
@@ -44,6 +46,10 @@ public:
     const double* GetWeights();
     
     const double distance(const double* input);
+    const double curvature(const double* theseWeights);    // return the angle of change between theseWeights and our weighting
     
     void resizeCategory(int newSize);
+    
+    char* Serialize(int &size);
+    void Deserialize(char* data, int size);
 };

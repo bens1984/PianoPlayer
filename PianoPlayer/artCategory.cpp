@@ -7,10 +7,10 @@
 //
 
 #include "artCategory.h"
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
-ArtCategory::ArtCategory(int dim) : sum(0), committed(false), dimensions(dim*2)	// * 2 to use complement vector
+ArtCategory::ArtCategory(int dim) : sum(0), committed(false), dimensions(dim*2), magnitude(0)	// * 2 to use complement vector
 {
     if (dimensions > 0)
         weighting = new double[dimensions];
@@ -24,6 +24,13 @@ ArtCategory::~ArtCategory()
     delete weighting;
 }
 
+double ArtCategory::GetMagnitude() {
+    if (magnitude == 0) {
+        for (int i = 0; i < dimensions; i++)
+            magnitude += weighting[i] * weighting[i];
+        magnitude = sqrt(magnitude);
+    }
+}
 // calculate the mChoice match factor for this category and the given input
 double ArtCategory::Choose(const double* input, int size, double mChoice)
 {
@@ -103,6 +110,8 @@ double ArtCategory::Learn(const double* input, int size, double mLearnRate)
             sum += weighting[i];
         delete newWeighting;
         
+        magnitude = 0;  // reset, recalc it the next time it's needed
+        
         return residual / (size * 0.5);
     } else return -1;
 }
@@ -131,20 +140,48 @@ const double* ArtCategory::GetWeights()
 
 const double ArtCategory::distance(const double *input)
 {
-    // take the not complemented part
-    int featureLength = dimensions / 2;	// how many elements in the pre-complement coded vector?
-    double center[featureLength];
-    
-    for (int i = 0; i < featureLength; i++)	// find the 'center' of the category
-    {
-        center[i] = (weighting[i] + (1.0 - weighting[i+featureLength])) * 0.5;
-    }
+    // This first version takes the not complemented part only (or at least it did...)
+//    int featureLength = dimensions / 2;	// how many elements in the pre-complement coded vector?
+//    double center[featureLength];
+//    
+//    for (int i = 0; i < featureLength; i++)	// find the 'center' of the category
+//    {
+//        center[i] = (weighting[i] + (1.0 - weighting[i+featureLength])) * 0.5;
+//    }
+//    double dist = 0;
+//    for (int i = 0; i < featureLength; i++)	// calculate the distance to the input
+//        dist += pow(input[i]-center[i],2);
+
+    // second version just calculates the magnitude of the difference between the input and our weighting
     double dist = 0;
-    for (int i = 0; i < featureLength; i++)	// calculate the distance to the input
-        dist += pow(input[i]-center[i],2);
+    for (int i = 0; i < dimensions; i++)	// calculate the distance to the input
+        dist += pow(input[i]-weighting[i],2.0);
+
     if (dist > 0)
         dist = sqrt(dist);
-    return dist;
+    return dist / (dimensions * 0.25);
+}
+const double ArtCategory::curvature(const double* theseWeights)    // return the angle of change between theseWeights and our weighting
+{
+    double dot = 0.0;
+    double sumThese = 0.0;
+    double unitWeight, unitThese;
+    for (int i = 0; i < dimensions; i++) {
+        sumThese += theseWeights[i] * theseWeights[i];
+    }
+    sumThese = sqrt(sumThese);  // calc the magnitude of the incoming weights
+    GetMagnitude();
+    if (sumThese == 0 || magnitude == 0)
+        return 0;
+    else {
+        for (int i = 0; i < dimensions; i++) {
+            unitWeight = (weighting[i]) / magnitude;
+            unitThese = (theseWeights[i]) / sumThese;
+            dot += unitWeight * unitThese;
+        }
+        
+        return acos(dot);
+    }
 }
 
 void ArtCategory::resizeCategory(int newSize)
@@ -172,4 +209,25 @@ void ArtCategory::resizeCategory(int newSize)
         committed = false;
         weighting = newWeights;
     }
+}
+
+char* ArtCategory::Serialize(int &size) {
+    size = 1 + sizeof(int) + sizeof(double) * (dimensions + 1); // committed + dimensions + sum + weights
+    char* data = (char*)malloc(size);
+    
+    data[0] = committed;
+    memcpy(data+1, &dimensions, sizeof(dimensions));
+    memcpy(data+5, &sum, sizeof(sum));
+    memcpy(data+9, weighting, dimensions * sizeof(double));
+    
+    return data;
+}
+void ArtCategory::Deserialize(char* data, int size) {
+    committed = data[0];
+    memcpy(&dimensions, data+1, sizeof(dimensions));
+    memcpy(&sum, data+5, sizeof(sum));
+    delete weighting;
+    weighting = (double*)malloc(dimensions * sizeof(double));
+    memcpy(weighting, data+9, dimensions * sizeof(double));
+    magnitude = 0;
 }

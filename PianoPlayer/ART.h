@@ -66,4 +66,11 @@ public:
     const double* GetWeights(int index);
     
     double GetImportanceSum();
+    
+    double calcDistance(int thatCategory, int thisCategory);    // calculate the distance between the two IDd categories
+    double calcCurvature(int thatCategory, int thisCategory);    // calculate the angle between the two IDd categories
+
+        // to store and recover this ART!
+    char* Serialize(int &size);
+    void Deserialize(char* data, int size);
 };

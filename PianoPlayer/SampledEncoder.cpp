@@ -8,11 +8,12 @@
 
 #include "SampledEncoder.h"
 #include <math.h>
+#include "stdio.h"
 
 SampledEncoder::SampledEncoder(int tokens) : SpatialEncoder(tokens)
 {
-    decayAmount = 0.9;
-    sampleSize = 1.0 / tokens;
+//    decayAmount = 0.9;
+    sampleSize = 1.0 / (double)tokens;
 }
 
 void SampledEncoder::AddToken(double sample)

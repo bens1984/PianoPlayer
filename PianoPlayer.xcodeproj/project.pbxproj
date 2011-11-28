@@ -22,6 +22,7 @@
 		A0A509401442B44D0055395A /* artCategory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A5093E1442B44D0055395A /* artCategory.cpp */; };
 		A0A509431442BE9C0055395A /* ART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0A509411442BE9C0055395A /* ART.cpp */; };
 		A0CFD6D71463049F006E09E6 /* FeatureDistanceEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0CFD6D51463049E006E09E6 /* FeatureDistanceEncoder.cpp */; };
+		A0DA01151481DD4300BFB5D1 /* WindowEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0DA01131481DD4300BFB5D1 /* WindowEncoder.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -67,6 +68,8 @@
 		A0A509421442BE9C0055395A /* ART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ART.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		A0CFD6D51463049E006E09E6 /* FeatureDistanceEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FeatureDistanceEncoder.cpp; sourceTree = "<group>"; };
 		A0CFD6D61463049F006E09E6 /* FeatureDistanceEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeatureDistanceEncoder.h; sourceTree = "<group>"; };
+		A0DA01131481DD4300BFB5D1 /* WindowEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WindowEncoder.cpp; sourceTree = "<group>"; };
+		A0DA01141481DD4300BFB5D1 /* WindowEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WindowEncoder.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +132,8 @@
 				A00F2E0D14621C5400AFB341 /* SampledEncoder.h */,
 				A0CFD6D51463049E006E09E6 /* FeatureDistanceEncoder.cpp */,
 				A0CFD6D61463049F006E09E6 /* FeatureDistanceEncoder.h */,
+				A0DA01131481DD4300BFB5D1 /* WindowEncoder.cpp */,
+				A0DA01141481DD4300BFB5D1 /* WindowEncoder.h */,
 			);
 			path = PianoPlayer;
 			sourceTree = "<group>";
@@ -194,6 +199,7 @@
 				A00F2E0E14621C5500AFB341 /* SampledEncoder.cpp in Sources */,
 				A0CFD6D71463049F006E09E6 /* FeatureDistanceEncoder.cpp in Sources */,
 				A05BB0FC147230E50025AFDC /* RhythmEncoder.cpp in Sources */,
+				A0DA01151481DD4300BFB5D1 /* WindowEncoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

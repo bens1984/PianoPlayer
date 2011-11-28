@@ -27,8 +27,8 @@ ART::ART(double _choice, double _learnRate, double _Vigilance) : mDimensions(19)
 }
 ART::~ART()
 {
-    for (int i = 0; i < mCategories.size(); i++)
-        delete mCategories.at(i);
+//    for (int i = 0; i < mCategories.size(); i++)
+//        delete mCategories.at(i);
     mCategories.clear();
     if (input != 0x00)
         delete input;
@@ -253,6 +253,20 @@ double ART::calcDistance(int cat)	// use set input and calculate distance to cen
     else
         return -1;
 }
+double ART::calcDistance(int thatCategory, int thisCategory)    // calculate the distance between the two IDd categories
+{
+    if (thatCategory > -1 && thatCategory < mCategories.size() && thisCategory > -1 && thisCategory < mCategories.size())
+        return mCategories.at(thatCategory)->distance(mCategories.at(thisCategory)->GetWeights());
+    else
+        return -1;
+}
+double ART::calcCurvature(int thatCategory, int thisCategory)    // calculate the angle between the two IDd categories
+{
+    if (thatCategory > -1 && thatCategory < mCategories.size() && thisCategory > -1 && thisCategory < mCategories.size())
+        return mCategories.at(thatCategory)->curvature(mCategories.at(thisCategory)->GetWeights());
+    else
+        return -1;
+}
 const double* ART::getWeights()	// return all of the weights of all of our categories
 {
     double *weights = (double*)malloc(mCategories.size()*mDimensions*2*sizeof(double));
@@ -291,4 +305,82 @@ double ART::GetImportanceSum()
         }
     }
     return importance / mCategories.size();
+}
+
+char* ART::Serialize(int &size) {
+    int categorySize;
+    char* categoryData;
+    
+    if (mCategories.size() > 0) {   // we always have 1 category, allocated in our constructor
+        categoryData = mCategories.at(0)->Serialize(categorySize);  // all categories SHOULD be the same size
+        
+        size = sizeof(int) * 3 + sizeof(double) * 3 + categorySize * mCategories.size();
+        char* data = (char*)malloc(size);
+        int index = 0;
+        
+        memcpy(data, &mDimensions, sizeof(int));
+        index += sizeof(int);
+        memcpy(data+index, &mChoice, sizeof(double));
+        index += sizeof(double);
+        memcpy(data+index, &mLearnRate, sizeof(double));
+        index += sizeof(double);
+        memcpy(data+index, &mVigilance, sizeof(double));
+        index += sizeof(double);
+        
+        memcpy(data+index, &categorySize, sizeof(int));     // size of each category
+        index += sizeof(int);
+        categorySize = mCategories.size();
+        memcpy(data+index, &categorySize, sizeof(int));     // how many categories
+        index += sizeof(int);
+        memcpy(data+index, categoryData, categorySize);     // the first one, since we already got it
+        index += categorySize;
+        
+        for (int i = 1; i < mCategories.size(); i++) {      // all the other categories
+            categoryData = mCategories.at(i)->Serialize(categorySize);
+            memcpy(data+index, categoryData, categorySize);
+            index += categorySize;
+        }
+        
+    //    vector<ResonanceGroup> mResonanceWeights;
+    //    vector<double> mObservations;     // how many times each category has been seen. trying to measure how "confident" we are in the observation
+    //    int inputCount;  // how many inputs we have seen
+    //    vector<double> mRecency;
+    //    double maxRecency;
+    //    double *input, *choices;
+    //    int recentChoice, choiceSize;	// the most recently chosen category, the size of the choices array
+    //    double residual;    // how much the chosen category changed with the last input/learning step
+
+        return data;
+    } else
+        return 0x00;
+}
+void ART::Deserialize(char* data, int size) {
+    int index = 0;
+    memcpy(&mDimensions, data, sizeof(int));
+    index += sizeof(int);
+    memcpy(&mChoice, data+index, sizeof(double));
+    index += sizeof(double);
+    memcpy(&mLearnRate, data+index, sizeof(double));
+    index += sizeof(double);
+    memcpy(&mVigilance, data+index, sizeof(double));
+    index += sizeof(double);
+    
+    int categorySize, categoryCount;
+    memcpy(&categorySize, data+index, sizeof(int));     // size of each category
+    index += sizeof(int);
+    memcpy(&categoryCount, data+index, sizeof(int));     // how many categories
+    index += sizeof(int);
+    
+    mCategories.clear();
+    for (int i = 0; i < categoryCount; i++)
+        mCategories.push_back(new ArtCategory(mDimensions));
+    
+    for (int i = 0; i < categoryCount; i++) {      // all the other categories
+        if (index+categorySize < size)
+            mCategories.at(i)->Deserialize(data+index, categorySize);
+        else
+            break;  // error!
+        index += categorySize;
+    }
+    // done! ... without any error checking.
 }
