@@ -13,32 +13,37 @@
 #define FEATURE_SIZE 65             // number of elements in the first level feature vector
 #define FEATURE_SIZE_1 0.015384615
 
-#define MAXIMAL_RESIDUAL 0.01        // if the residual = this then the reward = 1!
-#define MAXIMAL_RESIDUAL2 0.25        // maximum for L2 & L3 levels
+#define MAXIMAL_RESIDUAL 0.025        // if the residual = this then the reward = 1!
+#define MAXIMAL_RESIDUAL2 0.025        // maximum for L2 & L3 levels
+#define MAXIMAL_RESIDUAL3 0.025        // maximum for L2 & L3 levels
 #define RESIDUAL_CURVE 1.0        // exponent to raise residual amount to
 
 #include "ReinforcementLearner.h"
 
 ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), recencyTotal(0.0), useRecency(false), prevFitVector(0x00), prevFitVectorSize(0), fitVectorDistances(0x00), prevL1cat(-1), prevL2cat(-1) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    L1Art = new ART(0, 0.1, 0.975);    // params: choice, learning rate, vigilance
+    L1Art = new ART(0, 0.1, 0.9);    // params: choice, learning rate, vigilance
     
     L2STM = new MappedEncoder();
     L2STM->SetDecayAmount(0.2);
-    L2Art = new ART(0, 0.05, 0.95);
+    L2Art = new ART(0, 0.133, 0.925);
     
     L3STM = new MappedEncoder();
     L3STM->SetDecayAmount(0.2);
-    L3Art = new ART(0, 0.25, 0.925);
+    L3Art = new ART(0, 0.166, 0.925);
+    
+    L4STM = new MappedEncoder();
+    L4STM->SetDecayAmount(0.2);
+    L4Art = new ART(0, 0.2, 0.925);
     
     distCurvEncoder = new WindowEncoder(7); // for distance and curvature
-    L1DistanceArt = new ART(0, 0.2, 0.95);
+    L1DistanceArt = new ART(0, 0.05, 0.95);
     
     L2DistCurvEncoder = new WindowEncoder(7); //new WaveletEncoder(4);
-    L2DistanceArt = new ART(0, 0.2, 0.95);
+    L2DistanceArt = new ART(0, 0.05, 0.95);
     
     pitchEncoder = new SpatialEncoder(12);     // for encoding pitch class inputs
-    pitchEncoder->SetDecayAmount(0.4);
+    pitchEncoder->SetDecayAmount(0.15);
     //    tonalityEncoder = new TonalityEncoder(12); //, 0.025);
     intervalEncoder = new SpatialEncoder(25);   // 11 down, unison, 11 up intervals
     intervalEncoder->SetDecayAmount(0.2);
@@ -85,6 +90,8 @@ ReinforcementLearner::~ReinforcementLearner()
     
     delete L3STM;
     delete L3Art;
+    delete L4STM;
+    delete L4Art;
 ////    delete tempDistanceEncoder;
 //    delete curvatureEncoder;
 ////    delete tempCurvatureEncoder;
@@ -493,6 +500,19 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
         OSCSend::getSingleton()->oscSend("/cats", 5, &cats[0]);
     }
     
+    //    others[1] = L2DistanceArt->GetChosenCategoryID() << 16;
+    if (!store) {
+        MappedEncoder tempL4STM;
+        tempL4STM.Copy(L4STM);
+        tempL4STM.DoEncoding(L2Art->GetChosenCategoryID());
+        L3Art->ProcessNewObservation(tempL4STM.GetEncoding(), tempL4STM.GetDimensions());
+        L3Art->PredictChoice();
+    } else {
+        L4STM->DoEncoding(L3Art->GetChosenCategoryID());
+        L4Art->ProcessNewObservation(L4STM->GetEncoding(), L4STM->GetDimensions());
+        L4Art->makeChoice();
+    }
+    
     return CalcReward(rewards);
 }
 double ReinforcementLearner::CalcReward(double* rewards)
@@ -511,7 +531,7 @@ double ReinforcementLearner::CalcReward(double* rewards)
     if (L1distRes >= MAXIMAL_RESIDUAL)
         L1distRes = MAXIMAL_RESIDUAL / L1distRes;
     else
-        L1distRes = L1distRes / MAXIMAL_RESIDUAL, 2.0;
+        L1distRes = L1distRes / MAXIMAL_RESIDUAL;
     double L2Res = L2Art->GetResidual();
     if (rewards != 0x00)
         rewards[8] = L2Res;
@@ -530,10 +550,17 @@ double ReinforcementLearner::CalcReward(double* rewards)
     double thirdRes = L3Art->GetResidual();
     if (rewards != 0x00)
         rewards[10] = thirdRes;
-    if (thirdRes > MAXIMAL_RESIDUAL2)
-        thirdRes = MAXIMAL_RESIDUAL2 / thirdRes;
+    if (thirdRes > MAXIMAL_RESIDUAL3)
+        thirdRes = MAXIMAL_RESIDUAL3 / thirdRes;
     else
-        thirdRes = thirdRes / MAXIMAL_RESIDUAL2;
+        thirdRes = thirdRes / MAXIMAL_RESIDUAL3;
+    double L4Res = L4Art->GetResidual();
+    if (rewards != 0x00)
+        rewards[1] = L4Res;
+    if (L4Res > MAXIMAL_RESIDUAL3)
+        L4Res = MAXIMAL_RESIDUAL3 / L4Res;
+    else
+        L4Res = L4Res / MAXIMAL_RESIDUAL3;
 //    delete featureVector;
     
     return //(intervalArt->GetResidual() > MAXIMAL_RESIDUAL) * intervalImport * 0.5 + 
@@ -542,26 +569,9 @@ double ReinforcementLearner::CalcReward(double* rewards)
 //    return ((pitchArt->GetResidual() > 0.01) * pitchImport * 0.3 + (intervalArt->GetResidual() > 0.001) * intervalImport * 25.0 +
     //            (othersArt->GetResidual() > 0.01) * othersImport * 0.1 +
 //    (bigRes + L2Res + thirdRes)
-    bigRes + L2Res + thirdRes // + L1distRes * 0.25 + L2distRes)
-//            + (secondArt->GetResidual() > MAXIMAL_RESIDUAL) * secondImport // + derivedImport * 1.0
-#ifdef UPPERART
-//        + upperImport * (upperArt->GetResidual() > 0.03)) * 0.13
-#else
-//        ) * 0.165
-#endif
-#ifdef UPPER_DERIVED_ART
-//        + sin(upperArt->GetResidual() * M_PI) * pow(upperImport, IMPORTANCE_FACTOR)
-#endif
-        ; //1.0 - fabs(0.07 - res); // * importSum;               // here we want a lot of change * something boring, or minimal change * something new
-//    return sin(pow((pitchArt->GetResidual() + intervalArt->GetResidual() + othersArt->GetResidual()) * 0.66, 0.5) * 3.1) * pow(importSum, IMPORTANCE_FACTOR) + 
-//    sin(pow(thirdArt->GetResidual(), 0.5) * 3.1) * 4.0 * pow(thirdImportSum, IMPORTANCE_FACTOR)
-//#ifdef UPPER_DERIVED_ART
-//    + sin(upperArt->GetResidual() * M_PI) * pow(upperImport, IMPORTANCE_FACTOR)
-//#endif
-//    ; //1.0 - fabs(0.07 - res); // * importSum;               // here we want a lot of change * something boring, or minimal change * something new
+    bigRes * 0.01625 + L2Res * 0.0625 + thirdRes * 0.25 + L4Res // + L1distRes * 0.25 + L2distRes)
 
-//        else
-//            return res * pow(importSum, IMPORTANCE_FACTOR) * (1.0 - recency.at(cat) / recencyTotal);    // here we want a lot of change * something boring, or minimal change * something new
+        ;
 }
 
 

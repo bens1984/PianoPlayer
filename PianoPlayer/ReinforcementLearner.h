@@ -61,6 +61,8 @@ private:
     ART *L2Art;                 // L2 - trains on ID sequence of L1 categories
     MappedEncoder *L3STM;
     ART *L3Art;                 // L3 - trains on ID sequence of L2 categories
+    MappedEncoder *L4STM;
+    ART *L4Art;                 // L4 - trains on ID sequence of L3 categories
 
 //    TonalityEncoder *tonalityEncoder, *intervalClassEncoder;
 //    SampledEncoder *distanceEncoder, *L2DistEncoder; //, *curvatureEncoder;
