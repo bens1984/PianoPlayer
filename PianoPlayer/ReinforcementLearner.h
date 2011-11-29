@@ -100,13 +100,15 @@ private:
     int prevObs, prevL1cat, prevL2cat;    // previous inputs
     double mySponteneity;
     bool    useRecency;     // do we weight resonance by a measure of recency?
+    
+    double RewardWeights[4];
 private:
 //    void CalcFeatureVectorDistance(const double * featureVector);
     double CalcFitVectorDistance(const double* fit);   // distance between prevFitVector and fitVector
     double DoFirstLevelDistance(bool retain, int &categoryID, const double * featureVector);     // get the distance between first level resonance vectors and learn on it, returns importanceSum
     double CalcReward(double* rewards = 0x00);
 public:
-    ReinforcementLearner();
+    ReinforcementLearner(double LR1, double LR2, double LR3, double LR4);
     ~ReinforcementLearner();
     
     double ProcessNewObservation(const int& obs, const float& duration);  // this is the next pitch that is observed
@@ -142,4 +144,11 @@ public:
     
     void Save(string filename);
     void Load(string filename);
+    
+    void SetRewardWeights(float* newWeights) {
+        for (int i = 0; i < 4; i++) {
+            RewardWeights[i] = newWeights[i];
+            cout << RewardWeights[i] << " " << endl;;
+        }
+    }
 };

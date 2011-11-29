@@ -53,7 +53,19 @@ void ExamplePacketListener::ProcessMessage( const osc::ReceivedMessage& m, const
 		{
             d = new OSCData;
 			d->header = oscAnalyze;
-        } 
+        } else if( strcmp( m.AddressPattern(), "/learnRate") == 0 )	// toggle between purely analyzing and predicting states
+		{
+            d = new OSCData;
+			d->header = oscLearnRates;
+            for (int i = 0; i < 4; i++)
+                d->data.push_back((arg++)->AsFloat());	// the observed state
+        } else if( strcmp( m.AddressPattern(), "/rewardWeight") == 0 )	// toggle between purely analyzing and predicting states
+		{
+            d = new OSCData;
+			d->header = oscRewardWeights;
+            for (int i = 0; i < 4; i++)
+                d->data.push_back((arg++)->AsFloat());	// the observed state
+        }
 		if (d->header != oscNothing)
 		{
 			pthread_mutex_lock(MusiVerse::oscmutex);	//wait for the lock

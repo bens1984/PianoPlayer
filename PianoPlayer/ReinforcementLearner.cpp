@@ -13,28 +13,31 @@
 #define FEATURE_SIZE 65             // number of elements in the first level feature vector
 #define FEATURE_SIZE_1 0.015384615
 
+#define MINIMUM_RESIDUAL 0.001          // below this threshold it's considered the same, i.e. no learning is taking place
 #define MAXIMAL_RESIDUAL 0.025        // if the residual = this then the reward = 1!
-#define MAXIMAL_RESIDUAL2 0.025        // maximum for L2 & L3 levels
-#define MAXIMAL_RESIDUAL3 0.025        // maximum for L2 & L3 levels
-#define RESIDUAL_CURVE 1.0        // exponent to raise residual amount to
+//#define MAXIMAL_RESIDUAL2 0.025        // maximum for L2 & L3 levels
+//#define MAXIMAL_RESIDUAL3 0.025        // maximum for L2 & L3 levels
+//#define RESIDUAL_CURVE 1.0        // exponent to raise residual amount to
+
+#define reward(x) (x < MINIMUM_RESIDUAL ? 0 : MAXIMAL_RESIDUAL / (fabs(x - MAXIMAL_RESIDUAL) + MAXIMAL_RESIDUAL))
 
 #include "ReinforcementLearner.h"
 
-ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), recencyTotal(0.0), useRecency(false), prevFitVector(0x00), prevFitVectorSize(0), fitVectorDistances(0x00), prevL1cat(-1), prevL2cat(-1) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
+ReinforcementLearner::ReinforcementLearner(double LR1, double LR2, double LR3, double LR4)  : fitVector(0x00), importance(0x00), occurrencesTotal(0.0), prevObs(-1), recencyTotal(0.0), useRecency(false), prevFitVector(0x00), prevFitVectorSize(0), fitVectorDistances(0x00), prevL1cat(-1), prevL2cat(-1) /*int dimensions, double _choice, double _learnRate, double _Vigilance)*/
 {
-    L1Art = new ART(0, 0.1, 0.9);    // params: choice, learning rate, vigilance
+    L1Art = new ART(0, LR1, 0.925);    // params: choice, learning rate, vigilance  // 0.15
     
     L2STM = new MappedEncoder();
     L2STM->SetDecayAmount(0.2);
-    L2Art = new ART(0, 0.133, 0.925);
+    L2Art = new ART(0, LR2, 0.925);        // 0.05
     
     L3STM = new MappedEncoder();
     L3STM->SetDecayAmount(0.2);
-    L3Art = new ART(0, 0.166, 0.925);
+    L3Art = new ART(0, LR3, 0.925);     // 0.1
     
     L4STM = new MappedEncoder();
     L4STM->SetDecayAmount(0.2);
-    L4Art = new ART(0, 0.2, 0.925);
+    L4Art = new ART(0, LR4, 0.925);        // 0.15
     
     distCurvEncoder = new WindowEncoder(7); // for distance and curvature
     L1DistanceArt = new ART(0, 0.05, 0.95);
@@ -57,6 +60,10 @@ ReinforcementLearner::ReinforcementLearner()  : fitVector(0x00), importance(0x00
 ////    tempCurvatureEncoder = new FeatureDistanceEncoder(FEATURE_SIZE);//SampledEncoder(8); //new WaveletEncoder(4);
 //    derivedArt = new ART(0, 0.9, 0.95);
     
+    RewardWeights[0] = 0.0625;
+    RewardWeights[1] = 0.125;
+    RewardWeights[2] = 0.5;
+    RewardWeights[3] = 1.0;
 //    featureVector = (double*)malloc(sizeof(double)*FEATURE_SIZE); //new double(27);
     prevFeatureVector = (double*)malloc(sizeof(double)*FEATURE_SIZE); //new double(27);
     std::cout << "ReinforcementLearner -- ©2011 Benjamin Smith\n";
@@ -515,52 +522,59 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
     
     return CalcReward(rewards);
 }
+
 double ReinforcementLearner::CalcReward(double* rewards)
 {
     double bigRes = L1Art->GetResidual();
     if (rewards != 0x00)
         rewards[6] = bigRes;
-    if (bigRes >= MAXIMAL_RESIDUAL)
-        bigRes = MAXIMAL_RESIDUAL / bigRes;
-    else
-        bigRes = bigRes / MAXIMAL_RESIDUAL;
+    bigRes = reward(bigRes); //abs(bigRes - MAXIMAL_RESIDUAL) + MAXIMAL_RESIDUAL;
+//    if (bigRes >= MAXIMAL_RESIDUAL)
+//        bigRes = MAXIMAL_RESIDUAL / bigRes;
+//    else
+//        bigRes = bigRes / MAXIMAL_RESIDUAL;
     
     double L1distRes = L1DistanceArt->GetResidual();
     if (rewards != 0x00)
         rewards[7] = L1distRes;
-    if (L1distRes >= MAXIMAL_RESIDUAL)
-        L1distRes = MAXIMAL_RESIDUAL / L1distRes;
-    else
-        L1distRes = L1distRes / MAXIMAL_RESIDUAL;
+    L1distRes = reward(L1distRes);
+//    if (L1distRes >= MAXIMAL_RESIDUAL)
+//        L1distRes = MAXIMAL_RESIDUAL / L1distRes;
+//    else
+//        L1distRes = L1distRes / MAXIMAL_RESIDUAL;
     double L2Res = L2Art->GetResidual();
     if (rewards != 0x00)
         rewards[8] = L2Res;
-    if (L2Res >= MAXIMAL_RESIDUAL2)
-        L2Res = MAXIMAL_RESIDUAL2 / L2Res;
-    else
-        L2Res = pow(L2Res / MAXIMAL_RESIDUAL2, 2.0);
+    L2Res = reward(L2Res);
+//    if (L2Res >= MAXIMAL_RESIDUAL2)
+//        L2Res = MAXIMAL_RESIDUAL2 / L2Res;
+//    else
+//        L2Res = pow(L2Res / MAXIMAL_RESIDUAL2, 2.0);
     
     double L2distRes = L2DistanceArt->GetResidual();
     if (rewards != 0x00)
         rewards[9] = L2distRes;
-    if (L2distRes >= MAXIMAL_RESIDUAL)
-        L2distRes = MAXIMAL_RESIDUAL / L2distRes;
-    else
-        L2distRes = L2distRes / MAXIMAL_RESIDUAL;
+    L2distRes = reward(L2distRes);
+//    if (L2distRes >= MAXIMAL_RESIDUAL)
+//        L2distRes = MAXIMAL_RESIDUAL / L2distRes;
+//    else
+//        L2distRes = L2distRes / MAXIMAL_RESIDUAL;
     double thirdRes = L3Art->GetResidual();
     if (rewards != 0x00)
         rewards[10] = thirdRes;
-    if (thirdRes > MAXIMAL_RESIDUAL3)
-        thirdRes = MAXIMAL_RESIDUAL3 / thirdRes;
-    else
-        thirdRes = thirdRes / MAXIMAL_RESIDUAL3;
+    thirdRes = reward(thirdRes);
+//    if (thirdRes > MAXIMAL_RESIDUAL3)
+//        thirdRes = MAXIMAL_RESIDUAL3 / thirdRes;
+//    else
+//        thirdRes = thirdRes / MAXIMAL_RESIDUAL3;
     double L4Res = L4Art->GetResidual();
     if (rewards != 0x00)
         rewards[1] = L4Res;
-    if (L4Res > MAXIMAL_RESIDUAL3)
-        L4Res = MAXIMAL_RESIDUAL3 / L4Res;
-    else
-        L4Res = L4Res / MAXIMAL_RESIDUAL3;
+    L4Res = reward(L4Res);
+//    if (L4Res > MAXIMAL_RESIDUAL3)
+//        L4Res = MAXIMAL_RESIDUAL3 / L4Res;
+//    else
+//        L4Res = L4Res / MAXIMAL_RESIDUAL3;
 //    delete featureVector;
     
     return //(intervalArt->GetResidual() > MAXIMAL_RESIDUAL) * intervalImport * 0.5 + 
@@ -569,9 +583,7 @@ double ReinforcementLearner::CalcReward(double* rewards)
 //    return ((pitchArt->GetResidual() > 0.01) * pitchImport * 0.3 + (intervalArt->GetResidual() > 0.001) * intervalImport * 25.0 +
     //            (othersArt->GetResidual() > 0.01) * othersImport * 0.1 +
 //    (bigRes + L2Res + thirdRes)
-    bigRes * 0.01625 + L2Res * 0.0625 + thirdRes * 0.25 + L4Res // + L1distRes * 0.25 + L2distRes)
-
-        ;
+    bigRes * RewardWeights[0] + L2Res * RewardWeights[1] + thirdRes * RewardWeights[2] + L4Res * RewardWeights[3];
 }
 
 

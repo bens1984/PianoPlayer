@@ -18,7 +18,9 @@ int main (int argc, const char * argv[])
 {
     double rewards[11];
     bool analyze = true;
-    ReinforcementLearner* myRL = new ReinforcementLearner(); //6, 0, 0.1, 0.95);
+    double learnRates[4];
+    learnRates[0] = 0.15; learnRates[1] = 0.05; learnRates[2] = 0.1; learnRates[3] = 0.15;
+    ReinforcementLearner* myRL = new ReinforcementLearner(learnRates[0], learnRates[1], learnRates[2], learnRates[3]); //6, 0, 0.1, 0.95);
     OSCReceive myOSC;
     myOSC.StartReception();
     
@@ -56,7 +58,7 @@ int main (int argc, const char * argv[])
                 myRL->SetSponteneity(data->data[0]);
             } else if (data->header == oscReset) {
                 ReinforcementLearner* oldRL = myRL;
-                myRL = new ReinforcementLearner();
+                myRL = new ReinforcementLearner(learnRates[0], learnRates[1], learnRates[2], learnRates[3]);
                 delete oldRL;
             } else if (data->header == oscAnalyze) {
                 analyze = !analyze;
@@ -64,6 +66,11 @@ int main (int argc, const char * argv[])
                     cout << "Switching to analysis only mode." << endl;
                 else
                     cout << "Switching to predictive mode." << endl;
+            } else if (data->header == oscLearnRates) {
+                for (int i = 0; i < 4; i++)
+                    learnRates[i] = data->data[i];
+            } else if (data->header == oscRewardWeights) {
+                myRL->SetRewardWeights(&data->data[0]);
             }
             delete data;
         } else
