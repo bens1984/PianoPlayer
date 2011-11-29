@@ -511,7 +511,7 @@ double ReinforcementLearner::CalcPredictedReward(int test, const float& duration
     if (!store) {
         MappedEncoder tempL4STM;
         tempL4STM.Copy(L4STM);
-        tempL4STM.DoEncoding(L2Art->GetChosenCategoryID());
+        tempL4STM.DoEncoding(L3Art->GetChosenCategoryID());
         L3Art->ProcessNewObservation(tempL4STM.GetEncoding(), tempL4STM.GetDimensions());
         L3Art->PredictChoice();
     } else {
