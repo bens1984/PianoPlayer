@@ -13,7 +13,7 @@
 #define CLUSTER_SIZE 50     // how many milliseconds apart notes must be to be deemed equivalent
 #define CLUSTER_RATIO 0.2   // how far apart notes must be to be in the same cluster, in terms of %
 
-#define remainder(x, y) (x/y) - floor(x/y)
+#define remainder(x, y) (x/y) - (int)(x/y)
 
 TempoTracker::TempoTracker(double _windowSize) : windowSize(_windowSize) {
     
