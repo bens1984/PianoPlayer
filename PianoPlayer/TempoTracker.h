@@ -21,6 +21,7 @@ private:
     vector<double> stackedDurations;
     
     double windowSize;
+    double CalculatePhase(double frequency);
 public:
     TempoTracker(double _windowSize);
     ~TempoTracker();

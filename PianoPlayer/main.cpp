@@ -58,7 +58,7 @@ int main (int argc, const char * argv[])
                 }
                 
                 myTT->AddPulse(data->data[1]);
-                cout << "Tempo: " << myTT->CalculateTempo() << endl;
+                cout << myTT->CalculateTempo() << "<-Tempo" << endl;
             } else if (data->header == oscSponteneity) {
                 myRL->SetSponteneity(data->data[0]);
             } else if (data->header == oscReset) {
