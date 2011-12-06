@@ -45,6 +45,7 @@
 #include "SampledEncoder.h"
 #include "FeatureDistanceEncoder.h"
 #include "WindowEncoder.h"
+#include "TempoTracker.h"
 
 #include "OSCSend.h"
 
@@ -54,8 +55,8 @@ class ReinforcementLearner
 {
 private:
     SpatialEncoder *pitchEncoder, *intervalEncoder, *othersEncoder;
-    WindowEncoder* shapeEncoder;
-    ART *L1Art; //, *intervalArt, *othersArt, *derivedArt;       // one ART for each section of the input feature vector
+    WindowEncoder* shapeEncoder, *rhythmEncoder;
+    ART *L1Art, *intervalArt, *shapeArt; //, *derivedArt;       // one ART for each section of the input feature vector
     
     MappedEncoder *L2STM;
     ART *L2Art;                 // L2 - trains on ID sequence of L1 categories
@@ -84,6 +85,10 @@ private:
 //    MappedEncoder *tempThirdSTM;   //encoding category IDs from myArt for the thirdArt to watch
 //    double * featureVector;
     //__block 
+    TempoTracker* myTempo;
+    double tempo, prevDuration;   // what we think the real tempo is
+    ART *RhythmArt;
+    
     double *prevFeatureVector;
     double occurrencesTotal, recencyTotal; // how much total resonance we have observed from the ART, size of recency vector
     vector<double> occurrences;    // how much resonance has been observed for each category
@@ -111,10 +116,10 @@ public:
     ReinforcementLearner(double LR1, double LR2, double LR3, double LR4);
     ~ReinforcementLearner();
     
-    double ProcessNewObservation(const int& obs, const float& duration);  // this is the next pitch that is observed
+    double ProcessNewObservation(const int& obs, double duration);  // this is the next pitch that is observed
     
-    int PredictMaximalInput();      // look one step ahead and calculate what input value would be most rewarding
-    double CalcPredictedReward(int test, const float& duration, bool learn, double* rewards = 0x00);
+    int PredictMaximalInput(float &duration);      // look one step ahead and calculate what input value would be most rewarding
+    double CalcPredictedReward(int test, double duration, bool learn, double* rewards = 0x00);
     
     // ------- Accessors ----------
     const double *GetFitVector()

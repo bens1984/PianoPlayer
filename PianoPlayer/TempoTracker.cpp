@@ -11,9 +11,9 @@
 #include <iostream>
 
 #define CLUSTER_SIZE 50     // how many milliseconds apart notes must be to be deemed equivalent
-#define CLUSTER_RATIO 0.25   // how far apart notes must be to be in the same cluster, in terms of %
+#define CLUSTER_RATIO 0.15   // how far apart notes must be to be in the same cluster, in terms of %
 
-#define remainder(x, y) (x/y) - floor((x/y) + 0.5)
+#define remainder(x, y) ((x/y) - floor((x/y) + 0.5))   
 
 TempoTracker::TempoTracker(double _windowSize) : windowSize(_windowSize) {
     
@@ -25,32 +25,69 @@ TempoTracker::~TempoTracker() {
 }
 
 double TempoTracker::CalculatePhase(double frequency) {
+    int i;
     if (stackedDurations.size() == 0)
         return -1;
     // take 0 as 0 degrees and calculate the position of each beat (duration) in terms of radians
     vector<double> inRadians;
     inRadians.push_back(0); // there is a pulse at 0 and it will be at 0 degrees
     for (vector<double>::iterator it = stackedDurations.begin(); it != stackedDurations.end(); it++) {
-        inRadians.push_back(M_PI * remainder(*it, frequency));
+        inRadians.push_back(remainder(*it, frequency) * M_PI);
     }
-    // calculate an average vector
-    double x = 0;
-    double y = 0;
-    for (vector<double>::iterator it = inRadians.begin(); it != inRadians.end(); it++) {
-        x += sin(*it);
-        y += cos(*it);
+    // calculate the weight (gravity) of each point
+    double gravity[inRadians.size()];
+    for (int i = 0; i < inRadians.size(); i++)
+        gravity[i] = 1;
+    i = 0;
+    for (vector<double>::iterator it = inRadians.begin(); it != inRadians.end(); it++, i++) {
+        for (int j = i+1; j < inRadians.size(); j++) {
+            double distance = fabs(*it - inRadians.at(j));
+            if (distance > M_PI_2)
+                distance = M_PI - distance;     // if it's more than half way around the circle then we want the short side distance
+            distance = distance * distance;
+            if (distance < 0.1)
+                distance = 0.1;
+            if (distance != 0)
+                distance = 1.0 / distance;
+            gravity[i] += distance;
+            gravity[j] += distance;
+        }
     }
-    x /= inRadians.size();
-    y /= inRadians.size();
+    // find heaviest point
+    double heaviest = -1;
+    int heaviestIndex = -1;
+    for (int i = 0; i < inRadians.size(); i++) {
+        if (gravity[i] > heaviest) {
+            heaviest = gravity[i];
+            heaviestIndex = i;
+        }
+    }
+//    // calculate an average vector
+//    double x = 0;
+//    double y = 0;
+//    for (vector<double>::iterator it = inRadians.begin(); it != inRadians.end(); it++) {
+//        x += sin(*it);
+//        y += cos(*it);
+//    }
+//    x /= inRadians.size();
+//    y /= inRadians.size();
     // calculate phase from this average vector
-    double phase = acos(y / sqrt(x*x + y*y));
-    // calculate least squares value, i.e. how well this frequency fits these durations
-    phase *= frequency * M_1_PI;
-    double leastSquares = 0;
-    for (vector<double>::iterator it = stackedDurations.begin(); it != stackedDurations.end(); it++) {
-        leastSquares += pow(remainder((*it - phase), frequency), 2.0);    // offset for phase, then 
-    }
-    return leastSquares;
+    if (heaviestIndex != -1) {
+//        cout << "fit " << frequency << ":: ";
+        double phase = inRadians.at(heaviestIndex); //acos(y / sqrt(x*x + y*y));
+        // calculate least squares value, i.e. how well this frequency fits these durations
+        phase *= frequency * M_1_PI;
+        double leastSquares = 0;
+        for (vector<double>::iterator it = stackedDurations.begin(); it != stackedDurations.end(); it++) {
+            double ls = pow(fabs (remainder((*it - phase), frequency)) + 1, 2.0);
+//            cout << *it << "=" << ls << ", ";
+            if (ls > 0)
+                leastSquares += 1.0 / ls;    // offset for phase, then 
+        }
+//    cout << endl;
+        return leastSquares;
+    } else
+        return -1;
 }
 
 void TempoTracker::AddPulse(double duration) {
@@ -112,13 +149,13 @@ double TempoTracker::CalculateTempo() {
     for (int i = 0; i < clusters.size(); i++) {
         for (int j = i+1; j < clusters.size(); j++) {
             if (clusters.at(i) > clusters.at(j)) {
-                cout << clusters.at(i) << "/" << clusters.at(j) << " = " << remainder(clusters.at(i), clusters.at(j)) << endl;
+//                cout << clusters.at(i) << "/" << clusters.at(j) << " = " << remainder(clusters.at(i), clusters.at(j)) << endl;
                 if (fabs(remainder(clusters.at(i), clusters.at(j))) < CLUSTER_RATIO) {
                     clusterSums.at(i) += clusterWeights.at(j);
                     clusterSums.at(j) += clusterWeights.at(i);
                 }
             } else {
-                cout << clusters.at(j) << "/" << clusters.at(i) << " = " << remainder(clusters.at(j), clusters.at(i)) << endl;
+//                cout << clusters.at(j) << "/" << clusters.at(i) << " = " << remainder(clusters.at(j), clusters.at(i)) << endl;
                 if (fabs(remainder(clusters.at(j), clusters.at(i))) < CLUSTER_RATIO) {
                 clusterSums.at(i) += clusterWeights.at(j);
                 clusterSums.at(j) += clusterWeights.at(i);
@@ -129,13 +166,19 @@ double TempoTracker::CalculateTempo() {
     double maxWeight = -1;
     int maxIndex = -1;
     for (int i = 0; i < clusterWeights.size(); i++) {
-        if (clusters.at(i) >= 500 && clusters.at(i) < 1600 && clusterSums.at(i) > maxWeight) {    // make sure it's in foot tapping range
-            maxWeight = clusterSums.at(i);
+        if (clusters.at(i) >= 300 && clusters.at(i) < 1000 && clusterWeights.at(i) > maxWeight) {    // make sure it's in foot tapping range
+            maxWeight = clusterWeights.at(i);
             maxIndex = i;
         }
-        cout << clusters.at(i) << " :: " << clusterSums.at(i) << " || " << clusterWeights.at(i) << endl;
+//        cout << clusters.at(i) << " :: " << clusterSums.at(i) << " || " << clusterWeights.at(i) << endl;
     }
-    
+    if (maxIndex == -1) // nothing was found, now try again, for something "out of range"
+        for (int i = 0; i < clusterWeights.size(); i++) {
+            if (clusterWeights.at(i) > maxWeight) {    // make sure it's in foot tapping range
+                maxWeight = clusterWeights.at(i);
+                maxIndex = i;
+            }
+        }
     if (maxIndex > 0)
         return clusters.at(maxIndex);
     else

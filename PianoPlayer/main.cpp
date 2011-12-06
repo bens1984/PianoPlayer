@@ -11,7 +11,7 @@
 #include "ReinforcementLearner.h"
 #include "OSCReceive.h"
 #include "OSCSend.h"
-#include "TempoTracker.h"
+//#include "TempoTracker.h"
 
 using namespace std;
 
@@ -21,7 +21,7 @@ int main (int argc, const char * argv[])
     bool analyze = true;
     double learnRates[4];
     learnRates[0] = 0.15; learnRates[1] = 0.05; learnRates[2] = 0.1; learnRates[3] = 0.15;
-    TempoTracker* myTT = new TempoTracker(5000);
+//    TempoTracker* myTT = new TempoTracker(5000);
     ReinforcementLearner* myRL = new ReinforcementLearner(learnRates[0], learnRates[1], learnRates[2], learnRates[3]); //6, 0, 0.1, 0.95);
     OSCReceive myOSC;
     myOSC.StartReception();
@@ -53,12 +53,14 @@ int main (int argc, const char * argv[])
                 
                 if (!analyze)
                 {
-                    int nextStep = myRL->PredictMaximalInput();
-                    OSCSend::getSingleton()->oscSend("/predict", 1, &nextStep);
+                    float next[2];
+                    next[0] = myRL->PredictMaximalInput(next[1]);     // reusing rewards array to store new values
+                    cout << next[1] << " ";
+                    OSCSend::getSingleton()->oscSend("/predict", 2, &next[0]);
                 }
                 
-                myTT->AddPulse(data->data[1]);
-                cout << myTT->CalculateTempo() << "<-Tempo" << endl;
+//                myTT->AddPulse(data->data[1]);
+//                cout << myTT->CalculateTempo() << "<-Tempo" << endl;
             } else if (data->header == oscSponteneity) {
                 myRL->SetSponteneity(data->data[0]);
             } else if (data->header == oscReset) {

@@ -241,7 +241,10 @@ double ART::PredictChoice(double workingVigilance)
         } else
             chosen = true;
     }	// otherwise look again.
-    return choices[maxIndex];
+    if (maxIndex > -1)
+        return choices[maxIndex];
+    else
+        return -1;
 }
 int ART::GetChosenCategoryID() {
     return recentChoice;

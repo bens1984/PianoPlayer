@@ -30,6 +30,7 @@ double ArtCategory::GetMagnitude() {
             magnitude += weighting[i] * weighting[i];
         magnitude = sqrt(magnitude);
     }
+    return magnitude;
 }
 // calculate the mChoice match factor for this category and the given input
 double ArtCategory::Choose(const double* input, int size, double mChoice)
@@ -37,7 +38,9 @@ double ArtCategory::Choose(const double* input, int size, double mChoice)
     double minTotal = 0;
     for (int i = 0; i < size; i++)
         minTotal += (input[i] < weighting[i] ? input[i] : weighting[i]);
-    return minTotal / (mChoice + sum);
+    if (sum + mChoice > 0)
+        return minTotal / (mChoice + sum);
+    else return 0;
 }
 double ArtCategory::Choose(const double* input, int size, double mChoice, vector<ResonanceGroup>& resonanceWeights)
 {
